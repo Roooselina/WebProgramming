@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+            width: 800px;
+            height: 800px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Maze Game</h1>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Player variables
+        let player = {
+            x: 400,
+            y: 400,
+            width: 20,
+            height: 20,
+            speed: 5
+        };
+
+        // Monster variables
+        let monster = {
+            x: Math.random() * 2000,
+            y: Math.random() * 2000,
+            width: 20,
+            height: 20,
+            speed: 5,
+            isChasing: false,
+            recalculatePath: false
+        };
+
+        // Offset to center the player
+        let offsetX = player.x - canvas.width / 2;
+        let offsetY = player.y - canvas.height / 2;
+
+        // Maze walls
+        const walls = [
+            { x: 0, y: 0, width: 2000, height: 20 },
+            { x: 0, y: 0, width: 20, height: 2000 },
+            { x: 1980, y: 0, width: 20, height: 2000 },
+            { x: 0, y: 1980, width: 2000, height: 20 },
+            { x: 300, y: 200, width: 20, height: 500 },
+            { x: 500, y: 600, width: 300, height: 20 },
+            { x: 800, y: 400, width: 20, height: 600 },
+            { x: 1200, y: 800, width: 400, height: 20 },
+            { x: 1600, y: 300, width: 20, height: 700 },
+            { x: 1000, y: 1200, width: 20, height: 500 },
+            { x: 400, y: 1500, width: 600, height: 20 },
+            { x: 1400, y: 1700, width: 400, height: 20 }
+        ];
+
+        // Create grid for pathfinding
+        const gridSize = 40; // 40x40 grid
+        const cellSize = 50; // Each cell is 50x50 pixels
+        let grid = [];
+
+        for (let i = 0; i < gridSize; i++) {
+            grid[i] = [];
+            for (let j = 0; j < gridSize; j++) {
+                grid[i][j] = {
+                    x: j * cellSize,
+                    y: i * cellSize,
+                    walkable: true
+                };
+            }
+        }
+
+        // Apply walls to grid
+        walls.forEach(wall => {
+            let startX = Math.floor(wall.x / cellSize);
+            let endX = Math.floor((wall.x + wall.width) / cellSize);
+            let startY = Math.floor(wall.y / cellSize);
+            let endY = Math.floor((wall.y + wall.height) / cellSize);
+
+            for (let i = startY; i < endY; i++) {
+                for (let j = startX; j < endX; j++) {
+                    if (grid[i] && grid[i][j]) {
+                        grid[i][j].walkable = false;
+                    }
+                }
+            }
+        });
+
+        let keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        let gameStarted = false;
+        let score = 0;
+        let monsterPath = [];
+        let frameCount = 0;
+
+        // Draw start message
+        function drawStartMessage() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "40px Arial";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("PRESS SPACE TO START", canvas.width / 2, canvas.height / 2);
+        }
+
+        // Draw initial scene
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update offset to keep player centered
+            offsetX = player.x - canvas.width / 2;
+            offsetY = player.y - canvas.height / 2;
+
+            // Draw score at a fixed position on the canvas
+            ctx.fillStyle = 'black';
+            ctx.font = '24px Arial';
+            ctx.fillText('Score: ' + score, 80, 50);
+
+            // Draw goal
+            ctx.fillStyle = 'gold';
+            ctx.font = '24px Arial';
+            ctx.fillText('GOAL', 1900 - offsetX, 1960 - offsetY);
+            ctx.beginPath();
+            ctx.arc(1940 - offsetX, 1950 - offsetY, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Check if player reaches the goal
+            if (
+                Math.abs(player.x - 1940) < 20 &&
+                Math.abs(player.y - 1950) < 20
+            ) {
+                score++;
+                if (score >= 3) {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'white';
+                    ctx.font = '48px Arial';
+                    ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
+                resetGame();
+            }
+
+            // Draw player
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(canvas.width / 2 - player.width / 2, canvas.height / 2 - player.height / 2, player.width, player.height);
+
+            // Draw monster
+            ctx.fillStyle = 'red';
+            ctx.fillRect(monster.x - offsetX, monster.y - offsetY, monster.width, monster.height);
+
+            // Draw walls
+            ctx.fillStyle = 'black';
+            walls.forEach(wall => {
+                ctx.fillRect(wall.x - offsetX, wall.y - offsetY, wall.width, wall.height);
+            });
+        }
+
+
+        // Update player position
+        function updatePlayer() {
+            if (keys.ArrowUp && !checkCollision(player.x, player.y - player.speed)) {
+                player.y -= player.speed;
+            }
+            if (keys.ArrowDown && !checkCollision(player.x, player.y + player.speed)) {
+                player.y += player.speed;
+            }
+            if (keys.ArrowLeft && !checkCollision(player.x - player.speed, player.y)) {
+                player.x -= player.speed;
+            }
+            if (keys.ArrowRight && !checkCollision(player.x + player.speed, player.y)) {
+                player.x += player.speed;
+            }
+        }
+
+        // Update monster position with pathfinding
+        function updateMonster() {
+            // Always move the monster, regardless of visibility
+            if (monsterPath.length === 0 || monster.recalculatePath) {
+                let startPos = { x: monster.x, y: monster.y };
+                let endPos = { x: player.x, y: player.y };
+                monsterPath = findPath(startPos, endPos);
+                monster.recalculatePath = false;
+            }
+
+            // Follow the path
+            if (monsterPath.length > 0) {
+                let nextPos = monsterPath[0];
+                let dx = nextPos.x - monster.x;
+                let dy = nextPos.y - monster.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 0) {
+                    monster.x += (dx / distance) * monster.speed;
+                    monster.y += (dy / distance) * monster.speed;
+                }
+
+                // Remove node if reached
+                if (Math.abs(monster.x - nextPos.x) < 1 && Math.abs(monster.y - nextPos.y) < 1) {
+                    monsterPath.shift();
+                }
+            } else {
+                // Direct movement if path is empty
+                let dx = player.x - monster.x;
+                let dy = player.y - monster.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > 0) {
+                    let newMonsterX = monster.x + (dx / distance) * monster.speed;
+                    let newMonsterY = monster.y + (dy / distance) * monster.speed;
+                    if (!checkCollision(newMonsterX, newMonsterY, monster)) {
+                        monster.x = newMonsterX;
+                        monster.y = newMonsterY;
+                    }
+                }
+            }
+        }
+
+        // A* Pathfinding Algorithm
+        function findPath(startPos, endPos) {
+            let openList = [];
+            let closedList = [];
+            let startNode = getNodeAtPosition(startPos);
+            let endNode = getNodeAtPosition(endPos);
+
+            // If start or end node is not walkable, return empty path
+            if (!startNode || !endNode || !startNode.walkable || !endNode.walkable) {
+                return [];
+            }
+
+            startNode.g = 0;
+            startNode.h = heuristic(startNode, endNode);
+            startNode.f = startNode.g + startNode.h;
+            startNode.parent = null;
+
+            openList.push(startNode);
+
+            while (openList.length > 0) {
+                // Get node with lowest f
+                let currentNode = openList.reduce((prev, curr) => prev.f < curr.f ? prev : curr);
+
+                if (currentNode === endNode) {
+                    // Path found
+                    let path = [];
+                    let curr = currentNode;
+                    while (curr.parent) {
+                        path.push({ x: curr.x + cellSize / 2, y: curr.y + cellSize / 2 });
+                        curr = curr.parent;
+                    }
+                    return path.reverse();
+                }
+
+                openList.splice(openList.indexOf(currentNode), 1);
+                closedList.push(currentNode);
+
+                let neighbors = getNeighbors(currentNode);
+                for (let neighbor of neighbors) {
+                    if (!neighbor.walkable || closedList.includes(neighbor)) {
+                        continue;
+                    }
+
+                    let tentativeG = currentNode.g + distance(currentNode, neighbor);
+
+                    if (!openList.includes(neighbor) || tentativeG < neighbor.g) {
+                        neighbor.g = tentativeG;
+                        neighbor.h = heuristic(neighbor, endNode);
+                        neighbor.f = neighbor.g + neighbor.h;
+                        neighbor.parent = currentNode;
+
+                        if (!openList.includes(neighbor)) {
+                            openList.push(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found
+            return [];
+        }
+
+        function getNodeAtPosition(pos) {
+            let x = Math.floor(pos.x / cellSize);
+            let y = Math.floor(pos.y / cellSize);
+            if (grid[y] && grid[y][x]) {
+                return grid[y][x];
+            }
+            return null;
+        }
+
+        function getNeighbors(node) {
+            let neighbors = [];
+            let x = node.x / cellSize;
+            let y = node.y / cellSize;
+
+            let directions = [
+                { x: 0, y: -1 }, // Up
+                { x: 1, y: 0 },  // Right
+                { x: 0, y: 1 },  // Down
+                { x: -1, y: 0 }  // Left
+            ];
+
+            for (let dir of directions) {
+                let newX = x + dir.x;
+                let newY = y + dir.y;
+                if (grid[newY] && grid[newY][newX]) {
+                    neighbors.push(grid[newY][newX]);
+                }
+            }
+
+            return neighbors;
+        }
+
+        function distance(a, b) {
+            // For grid movement, the cost is the same for any movement
+            return 1;
+        }
+
+        function heuristic(a, b) {
+            // Manhattan distance
+            return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        }
+
+        // Check collision with walls
+        function checkCollision(nextX, nextY, entity = player) {
+            return walls.some(wall =>
+                nextX < wall.x + wall.width &&
+                nextX + entity.width > wall.x &&
+                nextY < wall.y + wall.height &&
+                nextY + entity.height > wall.y
+            );
+        }
+
+        // Handle keydown events
+        window.addEventListener('keydown', (event) => {
+            if (event.key === ' ' && !gameStarted) {
+                gameStarted = true;
+                drawScene();
+                showInitialImage();
+                return;
+            }
+            if (event.key in keys) {
+                keys[event.key] = true;
+            }
+        });
+
+        // Handle keyup events
+        window.addEventListener('keyup', (event) => {
+            if (event.key in keys) {
+                keys[event.key] = false;
+            }
+        });
+
+        // Main game loop
+        // Show initial image and speech bubble
+        function showInitialImage() {
+            const img = new Image();
+            img.src = '../images/game/6/ME.png';
+            img.onload = function () {
+                ctx.drawImage(img, canvas.width / 2 - img.width / 2, canvas.height / 2 - img.height / 2);
+                drawSpeechBubble();
+            };
+        }
+
+        function drawSpeechBubble() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 150, 200, 100);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(canvas.width / 2 - 100, canvas.height / 2 - 150, 200, 100);
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.fillText('Let the game begin!', canvas.width / 2 - 80, canvas.height / 2 - 100);
+        }
+
+        function resetGame() {
+            // Reset player and monster positions
+            player.x = 400;
+            player.y = 400;
+            monster.x = Math.random() * 2000;
+            monster.y = Math.random() * 2000;
+
+            // Regenerate walls for a new random maze
+            generateRandomMaze();
+        }
+
+        let goal = {
+            x: Math.floor(Math.random() * (1800 - 200 + 1)) + 200,
+            y: Math.floor(Math.random() * (1800 - 200 + 1)) + 200
+        };
+
+
+        function generateRandomMaze() {
+            walls.length = 0;
+
+            // Add border walls
+            walls.push({ x: 0, y: 0, width: 2000, height: 20 }); // Top border
+            walls.push({ x: 0, y: 0, width: 20, height: 2000 }); // Left border
+            walls.push({ x: 1980, y: 0, width: 20, height: 2000 }); // Right border
+            walls.push({ x: 0, y: 1980, width: 2000, height: 20 }); // Bottom border
+
+            // Generate random walls with increased complexity
+            for (let i = 0; i < 50; i++) {
+                let wall;
+                let isVertical = Math.random() < 0.5;
+                let wallLength = cellSize * (2 + Math.floor(Math.random() * 6)); // Longer wall segments
+
+                if (isVertical) {
+                    wall = {
+                        x: Math.floor(Math.random() * 40) * cellSize,
+                        y: Math.floor(Math.random() * (40 - wallLength / cellSize)) * cellSize,
+                        width: 20,
+                        height: wallLength
+                    };
+                } else {
+                    wall = {
+                        x: Math.floor(Math.random() * (40 - wallLength / cellSize)) * cellSize,
+                        y: Math.floor(Math.random() * 40) * cellSize,
+                        width: wallLength,
+                        height: 20
+                    };
+                }
+
+                // Ensure walls do not overlap with the borders
+                if (
+                    wall.x < 20 ||
+                    wall.y < 20 ||
+                    wall.x + wall.width > 1980 ||
+                    wall.y + wall.height > 1980
+                ) {
+                    continue;
+                }
+
+                // Ensure walls do not overlap with existing walls
+                if (!doesWallOverlap(wall)) {
+                    walls.push(wall);
+                }
+            }
+
+            // Generate a few extra shorter walls for added complexity
+            for (let i = 0; i < 20; i++) {
+                let wall = {
+                    x: Math.floor(Math.random() * 40) * cellSize,
+                    y: Math.floor(Math.random() * 40) * cellSize,
+                    width: Math.random() < 0.5 ? cellSize : 20,
+                    height: Math.random() < 0.5 ? 20 : cellSize
+                };
+
+                // Ensure walls do not overlap with the borders
+                if (
+                    wall.x < 20 ||
+                    wall.y < 20 ||
+                    wall.x + wall.width > 1980 ||
+                    wall.y + wall.height > 1980
+                ) {
+                    continue;
+                }
+
+                // Ensure walls do not overlap with existing walls
+                if (!doesWallOverlap(wall)) {
+                    walls.push(wall);
+                }
+            }
+
+            applyWallsToGrid();
+
+            // Generate a random goal position within the maze and not inside a wall
+            do {
+                goal.x = Math.floor(Math.random() * (1800 - 200 + 1)) + 200; // Avoid borders
+                goal.y = Math.floor(Math.random() * (1800 - 200 + 1)) + 200; // Avoid borders
+            } while (!isGoalPositionValid(goal));
+        }
+
+        function doesWallOverlap(newWall) {
+            for (let wall of walls) {
+                if (
+                    newWall.x < wall.x + wall.width &&
+                    newWall.x + newWall.width > wall.x &&
+                    newWall.y < wall.y + wall.height &&
+                    newWall.y + newWall.height > wall.y
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function isGoalPositionValid(goal) {
+            for (let wall of walls) {
+                if (
+                    goal.x >= wall.x &&
+                    goal.x <= wall.x + wall.width &&
+                    goal.y >= wall.y &&
+                    goal.y <= wall.y + wall.height
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update offset to keep player centered
+            offsetX = player.x - canvas.width / 2;
+            offsetY = player.y - canvas.height / 2;
+
+            // Draw score at a fixed position on the canvas
+            ctx.fillStyle = 'black';
+            ctx.font = '24px Arial';
+            ctx.fillText('Score: ' + score, 80, 50);
+
+            // Draw goal at its random position
+            ctx.fillStyle = 'gold';
+            ctx.beginPath();
+            ctx.arc(goal.x - offsetX, goal.y - offsetY, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = '24px Arial';
+            ctx.fillText('GOAL', goal.x - offsetX - 20, goal.y - offsetY - 15);
+
+            // Check if player reaches the goal
+            if (
+                Math.abs(player.x - goal.x) < 20 &&
+                Math.abs(player.y - goal.y) < 20
+            ) {
+                score++;
+                if (score >= 3) {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'white';
+                    ctx.font = '48px Arial';
+                    ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
+                resetGame();
+            }
+
+            // Draw player
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(canvas.width / 2 - player.width / 2, canvas.height / 2 - player.height / 2, player.width, player.height);
+
+            // Draw monster
+            ctx.fillStyle = 'red';
+            ctx.fillRect(monster.x - offsetX, monster.y - offsetY, monster.width, monster.height);
+
+            // Draw walls
+            ctx.fillStyle = 'black';
+            walls.forEach(wall => {
+                ctx.fillRect(wall.x - offsetX, wall.y - offsetY, wall.width, wall.height);
+            });
+        }
+
+
+
+        function applyWallsToGrid() {
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    grid[i][j].walkable = true;
+                }
+            }
+            walls.forEach(wall => {
+                let startX = Math.floor(wall.x / cellSize);
+                let endX = Math.floor((wall.x + wall.width) / cellSize);
+                let startY = Math.floor(wall.y / cellSize);
+                let endY = Math.floor((wall.y + wall.height) / cellSize);
+
+                for (let i = startY; i < endY; i++) {
+                    for (let j = startX; j < endX; j++) {
+                        if (grid[i] && grid[i][j]) {
+                            grid[i][j].walkable = false;
+                        }
+                    }
+                }
+            });
+        }
+
+        function gameLoop() {
+            if (!gameStarted) {
+                drawStartMessage();
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            if (checkGameOver()) {
+                return;
+            }
+            updatePlayer();
+
+            frameCount++;
+            if (frameCount % 20 === 0) {
+                monster.recalculatePath = true;
+            }
+
+            updateMonster();
+            drawScene();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Check game over condition
+        function checkGameOver() {
+            if (
+                player.x < monster.x + monster.width &&
+                player.x + player.width > monster.x &&
+                player.y < monster.y + monster.height &&
+                player.y + player.height > monster.y
+            ) {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                return true;
+            }
+            return false;
+        }
+
+        // Start the game loop
+        drawStartMessage();
+        gameLoop();
+    </script>
+</body>
+
+</html>

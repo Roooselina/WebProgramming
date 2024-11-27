@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Game Start</title>
+    <style>
+        @keyframes glitch {
+            0% {
+                text-shadow: 2px 2px #ff0000, -2px -2px #00ff00;
+            }
+
+            20% {
+                text-shadow: -2px 2px #ff0000, 2px -2px #00ff00;
+            }
+
+            40% {
+                text-shadow: 2px -2px #ff0000, -2px 2px #00ff00;
+            }
+
+            60% {
+                text-shadow: -2px -2px #ff0000, 2px 2px #00ff00;
+            }
+
+            80% {
+                text-shadow: 2px 2px #ff0000, -2px -2px #00ff00;
+            }
+
+            100% {
+                text-shadow: -2px 2px #ff0000, 2px -2px #00ff00;
+            }
+        }
+
+        @keyframes scoreGlitch {
+            0% {
+                transform: scale(1.05) rotate(1deg);
+            }
+
+            25% {
+                transform: scale(0.95) rotate(-1deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(1.5deg);
+            }
+
+            75% {
+                transform: scale(0.9) rotate(-1.5deg);
+            }
+
+            100% {
+                transform: scale(1.05) rotate(1deg);
+            }
+        }
+
+        @keyframes shakeEffect {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes popEffect {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(10);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        canvas {
+            background: #000;
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            height: 99vh;
+        }
+
+        #textInput {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            padding: 15px 20px;
+            width: 300px;
+            height: 50px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            text-align: center;
+            display: none;
+        }
+
+        #lyrics {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            font-family: 'Migae';
+            color: #fff;
+            text-align: center;
+            display: none;
+            font-weight: bold;
+            animation: glitch 1s infinite alternate, popEffect 0.3s ease;
+        }
+
+        .typewriter-glow {
+            color: #00f;
+            text-shadow:
+                0 0 150px #00f,
+                0 0 60px #00f,
+                0 0 100px #00f,
+                0 0 200px #00f,
+                0 0 250px #00f,
+                0 0 300px #00f;
+            animation: glowEffect 1s infinite alternate;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 30px;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <input type="text" id="textInput" placeholder="Enter text here">
+    <div id="lyrics"></div>
+    <div id="score">Score: 0</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('textInput');
+        const lyricsDiv = document.getElementById('lyrics');
+        const scoreDiv = document.getElementById('score');
+        let score = 0;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawStartMessage() {
+            ctx.font = "40px Arial";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("PRESS THE SPACE TO START", canvas.width / 2, canvas.height / 2);
+        }
+
+        drawStartMessage();
+
+        function playBeepAudio() {
+            setTimeout(() => {
+                const beepAudio = new Audio('../music/HeavenSays.mp3');
+                beepAudio.volume = 0.2;
+                beepAudio.play();
+                showLyrics(beepAudio); // 음악과 동시에 가사 표시
+            }, 1000);
+        }
+
+        let isStarted = false;
+
+        window.addEventListener('keydown', function (event) {
+            if (event.code === 'Space' && !isStarted) {
+                isStarted = true;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                playBeepAudio();
+                showTextInput();
+                randomScreenPopEffect();
+            }
+        });
+
+        textInput.addEventListener('keydown', function (event) {
+            if (event.code === 'Enter') {
+                const userInput = textInput.value.trim().toLowerCase();
+                textInput.value = '';
+
+                if (currentLyricToInput && userInput === currentLyricToInput.toLowerCase()) {
+                    score += 1;
+                    scoreDiv.textContent = "Score: " + score;
+                    scoreEffect();
+                    shakeScreen();
+                }
+            }
+        });
+
+        function showTextInput() {
+            textInput.style.display = 'block';
+        }
+
+        function randomScreenPopEffect() {
+            const minInterval = 3000; // 최소 3초
+            const maxInterval = 10000; // 최대 10초
+
+            function triggerPopEffect() {
+                canvas.style.animation = 'popEffect 0.3s ease';
+                lyricsDiv.style.animation = 'popEffect 0.3s ease';
+                setTimeout(() => {
+                    canvas.style.animation = ''; // 애니메이션 효과 종료 후 초기화
+                    lyricsDiv.style.animation = ''; // 애니메이션 효과 종료 후 초기화
+                }, 300);
+
+                // 다음 pop 효과를 위한 타이머 설정
+                const nextInterval = Math.random() * (maxInterval - minInterval) + minInterval;
+                setTimeout(triggerPopEffect, nextInterval);
+            }
+
+            // 첫 pop 효과 트리거
+            triggerPopEffect();
+        }
+
+        // 가사 데이터
+        const lyricsData = [
+            { time: 0, text: "Machine", inputWord: null, typeWriter: true },
+            { time: 3, text: "Learn", inputWord: null, typeWriter: false },
+            { time: 6, text: "School", inputWord: null, typeWriter: false },
+            { time: 9, text: "Terror", inputWord: "Terror", typeWriter: false },
+            { time: 12, text: "Angel", inputWord: null, typeWriter: false },
+            { time: 13, text: "Let us save you", inputWord: null, opacity: 0.5, typeWriter: false },
+            { time: 15, text: "Above", inputWord: null, typeWriter: false },
+            { time: 16, text: "The sky is breaking", inputWord: "sky", opacity: 0.5, typeWriter: false },
+            { time: 18, text: "Angel", inputWord: "Angel", typeWriter: false },
+            { time: 19, text: "Please don't resist", inputWord: null, typeWriter: false },
+            { time: 21, text: "Now spell:", inputWord: null, typeWriter: false },
+            { time: 22, text: "Heaven says", inputWord: "Heaven says", typeWriter: false },
+            { time: 24, text: "", inputWord: null, typeWriter: false },
+            { time: 36, text: "Let your wings spread", inputWord: null, typeWriter: false },
+            { time: 39, text: "Confess your sins", inputWord: "Confess", typeWriter: false },
+            { time: 42, text: "Be not afraid", inputWord: "afraid", typeWriter: false },
+            { time: 45, text: "It will end quick", inputWord: "end", typeWriter: false },
+            { time: 48, text: "Now spell 'Answer'", inputWord: null, typeWriter: false },
+            { time: 50, text: "FREEDOM", inputWord: "FREEDOM", typeWriter: true },
+            { time: 52, text: "Try AGAIN", inputWord: null, typeWriter: false },
+            { time: 54, text: "Now spell 'Mankind'", inputWord: null, typeWriter: false },
+            { time: 56, text: "DISEASE", inputWord: "DISEASE", typeWriter: true },
+            { time: 58, text: "Try AGAIN", inputWord: null, typeWriter: false },
+            { time: 60, text: "Now spell 'Answer'", inputWord: null, typeWriter: false },
+            { time: 62, text: "VIOLENCE", inputWord: "VIOLENCE", typeWriter: true },
+            { time: 65, text: "Try AGAIN", inputWord: null, typeWriter: false },
+            { time: 66, text: "Now spell 'Sinner'", inputWord: null, typeWriter: false },
+            { time: 68, text: "FRIEND", inputWord: "FRIEND", typeWriter: true },
+            { time: 70, text: "WRONG.\nThe correct speeling is", inputWord: null, typeWriter: false },
+            { time: 71, text: "YOU", inputWord: "YOU", typeWriter: true },
+            { time: 73, text: "Just let go", inputWord: null, typeWriter: false },
+            { time: 76, text: "Your past is sinful", inputWord: "sinful", typeWriter: false },
+            { time: 78, text: "Stop standing up", inputWord: null, typeWriter: false },
+            { time: 82, text: "You can't escape", inputWord: "escape", typeWriter: false },
+            { time: 84, text: "Heaven is above", inputWord: "above", typeWriter: false },
+            { time: 86, text: "Heaven is the answer", inputWord: "answer", typeWriter: false },
+            { time: 90, text: "Life is terror", inputWord: "terror", typeWriter: false },
+            { time: 92, text: "Blood in the machine", inputWord: null, typeWriter: false },
+            { time: 93, text: "You are in danger", inputWord: "danger", typeWriter: false },
+            { time: 96, text: "", inputWord: null, typeWriter: false },
+
+            { time: 108, text: "Greater than life", inputWord: "Greater", typeWriter: false },
+            { time: 110, text: "Stronger than health", inputWord: "Stronger", typeWriter: false },
+            { time: 113, text: "Echo around the world", inputWord: "Echo", typeWriter: false },
+            { time: 117, text: "Search for the end", inputWord: "Search", typeWriter: true },
+
+            { time: 120, text: "Answer for your crimes", inputWord: "Answer", typeWriter: false },
+            { time: 122, text: "Beg for mercy", inputWord: "mercy", typeWriter: false },
+            { time: 126, text: "Take back your control", inputWord: "control", typeWriter: true },
+
+            { time: 132, text: "Let your wings spread", inputWord: null, typeWriter: false },
+            { time: 135, text: "Confess your sins", inputWord: "Confess", typeWriter: false },
+            { time: 138, text: "Be not afraid", inputWord: "afraid", typeWriter: false },
+            { time: 140, text: "It will end quick", inputWord: "end", typeWriter: false },
+            { time: 144, text: "Heaven is above", inputWord: "above", typeWriter: false },
+            { time: 146, text: "Heaven is the answer", inputWord: "answer", typeWriter: false },
+            { time: 150, text: "Life is terror", inputWord: "terror", typeWriter: false },
+            { time: 153, text: "Blood in the machine", inputWord: null, typeWriter: false },
+            { time: 154, text: "You are in danger", inputWord: "danger", typeWriter: true },
+            { time: 160, text: "", inputWord: null, typeWriter: false },
+        ];
+
+        let currentLyricToInput = null;
+        let typingInterval; // 타이핑 효과를 위한 변수
+
+        function showLyrics(audio) {
+            lyricsDiv.style.display = 'block';
+
+            audio.addEventListener('timeupdate', function () {
+                const currentTime = Math.floor(audio.currentTime);
+
+                // 현재 시간에 해당하는 가사 가져오기
+                const currentLyrics = lyricsData.find(lyric => lyric.time === currentTime);
+                if (currentLyrics) {
+                    clearInterval(typingInterval); // 이전 타이핑 효과 중지
+                    lyricsDiv.innerHTML = ''; // 이전 가사 초기화
+                    lyricsDiv.style.color = '#fff'; // 기본 색상 설정
+                    lyricsDiv.style.opacity = currentLyrics.opacity || 1; // opacity 적용
+                    lyricsDiv.style.fontSize = "100px"; // 기본 폰트 크기 초기화
+                    lyricsDiv.classList.remove('typewriter-glow'); // GLOW 효과 초기화
+                    currentLyricToInput = null; // 입력 단어 초기화
+
+                    if (currentLyrics.typeWriter) {
+                        currentLyricToInput = currentLyrics.inputWord;
+                        lyricsDiv.style.fontSize = "200px"; // 타이핑 효과일 때 폰트 크기 증가
+                        lyricsDiv.classList.add('typewriter-glow'); // GLOW 효과 추가
+                        typeWriterEffect(currentLyrics.text, function () {
+                            lyricsDiv.style.fontSize = "100px"; // 타이핑 효과 완료 후 폰트 크기 복원
+                        });
+                    } else {
+                        let displayText = currentLyrics.text;
+
+                        if (currentLyrics.inputWord) {
+                            currentLyricToInput = currentLyrics.inputWord;
+                            // 입력해야 하는 단어를 빨간색으로 강조 표시
+                            const regex = new RegExp(`(${currentLyrics.inputWord})`, 'i');
+                            displayText = currentLyrics.text.replace(regex, '<span style="color: red;">$1</span>');
+                        }
+
+                        lyricsDiv.innerHTML = displayText;
+                    }
+                }
+            });
+        }
+
+        // 타이핑 효과 함수 추가
+        function typeWriterEffect(text) {
+            let i = 0;
+            const speed = 100; // 타이핑 속도 조절 (밀리초)
+
+            typingInterval = setInterval(() => {
+                if (i < text.length) {
+                    lyricsDiv.innerHTML += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                }
+            }, speed);
+        }
+
+        function shakeScreen() {
+            const intensity = 20; // 흔들림 강도
+            const duration = 300; // 흔들림 지속 시간 (밀리초)
+            let startTime = Date.now();
+
+            function shake() {
+                const elapsed = Date.now() - startTime;
+                if (elapsed < duration) {
+                    const offsetX = (Math.random() - 0.5) * intensity;
+                    const offsetY = (Math.random() - 0.5) * intensity;
+                    canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                    lyricsDiv.style.transform = `translate(${offsetX * 2}px, ${offsetY * 2}px)`;
+                    requestAnimationFrame(shake);
+                } else {
+                    canvas.style.transform = ''; // 흔들림 종료 후 원래 위치로 복원
+                    lyricsDiv.style.transform = 'translate(-50%, -50%)'; // 가사 위치 복원
+                }
+            }
+
+            shake();
+        }
+
+        function scoreEffect() {
+            scoreDiv.style.animation = 'scoreGlitch 0.5s ease, shakeEffect 0.5s infinite alternate';
+            setTimeout(() => {
+                scoreDiv.style.animation = ''; // 애니메이션 효과 종료 후 초기화
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+            width: 800px;
+            height: 800px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Maze Game</h1>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
+    <p>Use arrow keys to navigate through the maze!</p>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Player variables
+        let player = {
+            x: 400,
+            y: 400,
+            width: 20,
+            height: 20,
+            speed: 5
+        };
+
+        // Monster variables
+        let monster = {
+            x: Math.random() * 2000,
+            y: Math.random() * 2000,
+            width: 20,
+            height: 20,
+            speed: 5,
+            isChasing: false,
+            recalculatePath: false
+        };
+
+        // Offset to center the player
+        let offsetX = player.x - canvas.width / 2;
+        let offsetY = player.y - canvas.height / 2;
+
+        // Maze walls
+        const walls = [
+            { x: 0, y: 0, width: 2000, height: 20 },
+            { x: 0, y: 0, width: 20, height: 2000 },
+            { x: 1980, y: 0, width: 20, height: 2000 },
+            { x: 0, y: 1980, width: 2000, height: 20 },
+            { x: 300, y: 200, width: 20, height: 500 },
+            { x: 500, y: 600, width: 300, height: 20 },
+            { x: 800, y: 400, width: 20, height: 600 },
+            { x: 1200, y: 800, width: 400, height: 20 },
+            { x: 1600, y: 300, width: 20, height: 700 },
+            { x: 1000, y: 1200, width: 20, height: 500 },
+            { x: 400, y: 1500, width: 600, height: 20 },
+            { x: 1400, y: 1700, width: 400, height: 20 }
+        ];
+
+        // Create grid for pathfinding
+        const gridSize = 40; // 40x40 grid
+        const cellSize = 50; // Each cell is 50x50 pixels
+        let grid = [];
+
+        for (let i = 0; i < gridSize; i++) {
+            grid[i] = [];
+            for (let j = 0; j < gridSize; j++) {
+                grid[i][j] = {
+                    x: j * cellSize,
+                    y: i * cellSize,
+                    walkable: true
+                };
+            }
+        }
+
+        // Apply walls to grid
+        walls.forEach(wall => {
+            let startX = Math.floor(wall.x / cellSize);
+            let endX = Math.floor((wall.x + wall.width) / cellSize);
+            let startY = Math.floor(wall.y / cellSize);
+            let endY = Math.floor((wall.y + wall.height) / cellSize);
+
+            for (let i = startY; i < endY; i++) {
+                for (let j = startX; j < endX; j++) {
+                    if (grid[i] && grid[i][j]) {
+                        grid[i][j].walkable = false;
+                    }
+                }
+            }
+        });
+
+        let keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        let gameStarted = false;
+        let monsterPath = [];
+        let frameCount = 0;
+
+        // Draw start message
+        function drawStartMessage() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "40px Arial";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("PRESS SPACE TO START", canvas.width / 2, canvas.height / 2);
+        }
+
+        // Draw initial scene
+        function drawScene() {
+            if (!gameStarted) {
+                drawStartMessage();
+                return;
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update offset to keep player centered
+            offsetX = player.x - canvas.width / 2;
+            offsetY = player.y - canvas.height / 2;
+
+            // Draw goal
+            ctx.fillStyle = 'gold';
+            ctx.font = '24px Arial';
+            ctx.fillText('GOAL', 1900 - offsetX, 1960 - offsetY);
+            ctx.beginPath();
+            ctx.arc(1940 - offsetX, 1950 - offsetY, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw player
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(canvas.width / 2 - player.width / 2, canvas.height / 2 - player.height / 2, player.width, player.height);
+
+            // Draw monster
+            ctx.fillStyle = 'red';
+            ctx.fillRect(monster.x - offsetX, monster.y - offsetY, monster.width, monster.height);
+
+            // Draw walls
+            ctx.fillStyle = 'black';
+            walls.forEach(wall => {
+                ctx.fillRect(wall.x - offsetX, wall.y - offsetY, wall.width, wall.height);
+            });
+        }
+
+        // Update player position
+        function updatePlayer() {
+            if (keys.ArrowUp && !checkCollision(player.x, player.y - player.speed)) {
+                player.y -= player.speed;
+            }
+            if (keys.ArrowDown && !checkCollision(player.x, player.y + player.speed)) {
+                player.y += player.speed;
+            }
+            if (keys.ArrowLeft && !checkCollision(player.x - player.speed, player.y)) {
+                player.x -= player.speed;
+            }
+            if (keys.ArrowRight && !checkCollision(player.x + player.speed, player.y)) {
+                player.x += player.speed;
+            }
+        }
+
+        // Update monster position with pathfinding
+        function updateMonster() {
+            // Check if monster is in view
+            if (Math.abs(monster.x - player.x) < canvas.width / 2 && Math.abs(monster.y - player.y) < canvas.height / 2) {
+                monster.isChasing = true;
+            } else {
+                monster.isChasing = false;
+            }
+
+            if (monster.isChasing) {
+                // Recalculate path every 20 frames
+                if (monsterPath.length === 0 || monster.recalculatePath) {
+                    let startPos = { x: monster.x, y: monster.y };
+                    let endPos = { x: player.x, y: player.y };
+                    monsterPath = findPath(startPos, endPos);
+                    monster.recalculatePath = false;
+                }
+
+                // Follow the path
+                if (monsterPath.length > 0) {
+                    let nextPos = monsterPath[0];
+                    let dx = nextPos.x - monster.x;
+                    let dy = nextPos.y - monster.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 0) {
+                        monster.x += (dx / distance) * monster.speed;
+                        monster.y += (dy / distance) * monster.speed;
+                    }
+
+                    // Remove node if reached
+                    if (Math.abs(monster.x - nextPos.x) < 1 && Math.abs(monster.y - nextPos.y) < 1) {
+                        monsterPath.shift();
+                    }
+                } else {
+                    // Direct movement if path is empty
+                    let dx = player.x - monster.x;
+                    let dy = player.y - monster.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 0) {
+                        let newMonsterX = monster.x + (dx / distance) * monster.speed;
+                        let newMonsterY = monster.y + (dy / distance) * monster.speed;
+                        if (!checkCollision(newMonsterX, newMonsterY, monster)) {
+                            monster.x = newMonsterX;
+                            monster.y = newMonsterY;
+                        }
+                    }
+                }
+            } else {
+                // Random movement when not chasing
+                let newMonsterX = monster.x + (Math.random() - 0.5) * monster.speed;
+                let newMonsterY = monster.y + (Math.random() - 0.5) * monster.speed;
+                if (!checkCollision(newMonsterX, newMonsterY, monster)) {
+                    monster.x = Math.max(20, Math.min(1980 - monster.width, newMonsterX));
+                    monster.y = Math.max(20, Math.min(1980 - monster.height, newMonsterY));
+                }
+            }
+        }
+
+        // A* Pathfinding Algorithm
+        function findPath(startPos, endPos) {
+            let openList = [];
+            let closedList = [];
+            let startNode = getNodeAtPosition(startPos);
+            let endNode = getNodeAtPosition(endPos);
+
+            // If start or end node is not walkable, return empty path
+            if (!startNode || !endNode || !startNode.walkable || !endNode.walkable) {
+                return [];
+            }
+
+            startNode.g = 0;
+            startNode.h = heuristic(startNode, endNode);
+            startNode.f = startNode.g + startNode.h;
+            startNode.parent = null;
+
+            openList.push(startNode);
+
+            while (openList.length > 0) {
+                // Get node with lowest f
+                let currentNode = openList.reduce((prev, curr) => prev.f < curr.f ? prev : curr);
+
+                if (currentNode === endNode) {
+                    // Path found
+                    let path = [];
+                    let curr = currentNode;
+                    while (curr.parent) {
+                        path.push({ x: curr.x + cellSize / 2, y: curr.y + cellSize / 2 });
+                        curr = curr.parent;
+                    }
+                    return path.reverse();
+                }
+
+                openList.splice(openList.indexOf(currentNode), 1);
+                closedList.push(currentNode);
+
+                let neighbors = getNeighbors(currentNode);
+                for (let neighbor of neighbors) {
+                    if (!neighbor.walkable || closedList.includes(neighbor)) {
+                        continue;
+                    }
+
+                    let tentativeG = currentNode.g + distance(currentNode, neighbor);
+
+                    if (!openList.includes(neighbor) || tentativeG < neighbor.g) {
+                        neighbor.g = tentativeG;
+                        neighbor.h = heuristic(neighbor, endNode);
+                        neighbor.f = neighbor.g + neighbor.h;
+                        neighbor.parent = currentNode;
+
+                        if (!openList.includes(neighbor)) {
+                            openList.push(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found
+            return [];
+        }
+
+        function getNodeAtPosition(pos) {
+            let x = Math.floor(pos.x / cellSize);
+            let y = Math.floor(pos.y / cellSize);
+            if (grid[y] && grid[y][x]) {
+                return grid[y][x];
+            }
+            return null;
+        }
+
+        function getNeighbors(node) {
+            let neighbors = [];
+            let x = node.x / cellSize;
+            let y = node.y / cellSize;
+
+            let directions = [
+                { x: 0, y: -1 }, // Up
+                { x: 1, y: 0 },  // Right
+                { x: 0, y: 1 },  // Down
+                { x: -1, y: 0 }  // Left
+            ];
+
+            for (let dir of directions) {
+                let newX = x + dir.x;
+                let newY = y + dir.y;
+                if (grid[newY] && grid[newY][newX]) {
+                    neighbors.push(grid[newY][newX]);
+                }
+            }
+
+            return neighbors;
+        }
+
+        function distance(a, b) {
+            // For grid movement, the cost is the same for any movement
+            return 1;
+        }
+
+        function heuristic(a, b) {
+            // Manhattan distance
+            return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        }
+
+        // Check collision with walls
+        function checkCollision(nextX, nextY, entity = player) {
+            return walls.some(wall =>
+                nextX < wall.x + wall.width &&
+                nextX + entity.width > wall.x &&
+                nextY < wall.y + wall.height &&
+                nextY + entity.height > wall.y
+            );
+        }
+
+        // Handle keydown events
+        window.addEventListener('keydown', (event) => {
+            if (event.key === ' ' && !gameStarted) {
+                gameStarted = true;
+                drawScene();
+                return;
+            }
+            if (event.key in keys) {
+                keys[event.key] = true;
+            }
+        });
+
+        // Handle keyup events
+        window.addEventListener('keyup', (event) => {
+            if (event.key in keys) {
+                keys[event.key] = false;
+            }
+        });
+
+        // Main game loop
+        function gameLoop() {
+            if (!gameStarted) {
+                drawStartMessage();
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            if (checkGameOver()) {
+                return;
+            }
+            updatePlayer();
+
+            frameCount++;
+            if (frameCount % 20 === 0) {
+                monster.recalculatePath = true;
+            }
+
+            updateMonster();
+            drawScene();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Check game over condition
+        function checkGameOver() {
+            if (
+                player.x < monster.x + monster.width &&
+                player.x + player.width > monster.x &&
+                player.y < monster.y + monster.height &&
+                player.y + player.height > monster.y
+            ) {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                return true;
+            }
+            return false;
+        }
+
+        // Start the game loop
+        drawStartMessage();
+        gameLoop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Prevent scrollbars */
+            position: relative;
+            /* Establish a positioning context */
+        }
+
+        #backgroundBlack {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            /* Set z-index below other elements */
+            background-color: black;
+            /* Set the initial black background */
+        }
+
+        #backgroundImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            /* Set z-index between canvas and other elements */
+            background-image: url('../images/game/3/background.png');
+            background-size: 100%;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+            opacity: 0;
+            /* Make it invisible initially */
+            transition: opacity 1s ease-in-out;
+            /* Smooth transition */
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: 95vh;
+            width: 99%;
+            position: relative;
+            z-index: 2;
+            /* Ensure it appears above the backgrounds but below GIFs */
+        }
+
+        #animatedGif,
+        #animatedGif2 {
+            position: absolute;
+            top: calc(20% + 60px);
+            transform: translateX(-50%);
+            z-index: 3;
+            /* Ensure they appear above the canvas */
+            pointer-events: none;
+            /* Allow clicks to pass through */
+            display: none;
+            /* Initially hide the GIFs */
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* Style for the animated RUV GIF */
+        #animatedGif {
+            left: calc(50% - 300px);
+            width: 217.075px;
+            height: 368.125px;
+        }
+
+        /* Style for the animated SELEVER GIF */
+        #animatedGif2 {
+            left: calc(50% + 100px);
+            width: 228.5px;
+            height: 387.5px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            80% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Black Background Layer -->
+    <div id="backgroundBlack"></div>
+
+    <!-- Image Background Layer -->
+    <div id="backgroundImage"></div>
+
+    <!-- Animated GIF Elements -->
+    <img id="animatedGif" src="../images/game/3/Ruv_idle.gif" alt="Animated GIF">
+    <img id="animatedGif2" src="../images/game/3/Selever_idle.gif" alt="Animated GIF">
+
+    <!-- Canvas for the game -->
+    <canvas id="myCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("myCanvas");
+        const ctx = canvas.getContext("2d");
+        let score = 0;
+        let fallingKeys = [];
+        const keys = ["W", "A", "S", "D"]; // Existing four keys
+        let sectionWidth = 0; // Will be updated in resizeCanvas
+        let countdown = ["Ready?", "2", "1", "Go!"];
+        let countdownIndex = 0;
+        let countdownInterval;
+        let countdownY = 0;
+        let gifShown = false; // Track if the GIF has been shown
+
+
+        // Reference to the animated GIFs and background images
+        const animatedGif_Ruv = document.getElementById("animatedGif");
+        const animatedGif_Selever = document.getElementById("animatedGif2");
+        const backgroundImage = document.getElementById("backgroundImage");
+        const backgroundBlack = document.getElementById("backgroundBlack");
+
+        // Predefined key sequence
+        const predefinedKeys = [
+            // RUV
+            { key: 'W', time: 400, botIndex: 1 },   // 파
+            { key: 'A', time: 750, botIndex: 1 },   // 라
+            { key: 'S', time: 1050, botIndex: 1 },  // 시
+            { key: 'D', time: 1250, botIndex: 1 },  // 도
+            { key: 'W', time: 1650, botIndex: 1 },  // 시
+
+            { key: 'A', time: 2050, botIndex: 1 },   // 파
+            { key: 'S', time: 2350, botIndex: 1 },   // 라
+            { key: 'D', time: 2650, botIndex: 1 },   // 시
+            { key: 'W', time: 2850, botIndex: 1 },   // 도
+            { key: 'A', time: 3250, botIndex: 1 },   // 시
+
+            { key: 'A', time: 3750, botIndex: 1 },   // 파
+            { key: 'S', time: 4050, botIndex: 1 },   // 라
+            { key: 'D', time: 4250, botIndex: 1 },   // 시
+            { key: 'W', time: 4650, botIndex: 1 },   // 도
+            { key: 'A', time: 5050, botIndex: 1 },   // 시
+
+            { key: 'A', time: 5450, botIndex: 1 },   // 8분음표
+            { key: 'S', time: 5684, botIndex: 1 },   // 8분음표
+            { key: 'D', time: 5919, botIndex: 1 },   // 8분음표
+            { key: 'W', time: 6153, botIndex: 1 },   // 16분음표
+            { key: 'A', time: 6270, botIndex: 1 },   // 8분음표
+            { key: 'S', time: 6505, botIndex: 1 },   // 8분음표
+            { key: 'D', time: 6739, botIndex: 1 },   // 16분음표
+            { key: 'W', time: 6856, botIndex: 1 },   // 16분음표
+            { key: 'A', time: 6973, botIndex: 1 },   // 16분음표
+            { key: 'S', time: 7091, botIndex: 1 },   // 16분음표
+            { key: 'D', time: 7208, botIndex: 1 },   // 16분음표
+
+            // SELEVER
+            { key: 'W', time: 7350, botIndex: 2 },   // 파
+            { key: 'A', time: 7650, botIndex: 2 },   // 라
+            { key: 'S', time: 7950, botIndex: 2 },   // 시
+            { key: 'D', time: 8150, botIndex: 2 },   // 도
+            { key: 'W', time: 8550, botIndex: 2 },   // 시
+
+            { key: 'A', time: 9150, botIndex: 2 },   // 파
+            { key: 'S', time: 9450, botIndex: 2 },   // 라
+            { key: 'D', time: 9750, botIndex: 2 },   // 시
+            { key: 'W', time: 9950, botIndex: 2 },   // 도
+            { key: 'A', time: 10350, botIndex: 2 },  // 시
+
+            { key: 'A', time: 10850, botIndex: 2 },  // 파
+            { key: 'S', time: 11150, botIndex: 2 },  // 라
+            { key: 'D', time: 11350, botIndex: 2 },  // 시
+            { key: 'W', time: 11750, botIndex: 2 },  // 도
+            { key: 'A', time: 12150, botIndex: 2 },  // 시
+
+            { key: 'A', time: 12550, botIndex: 2 },  // 8분음표
+            { key: 'S', time: 12784, botIndex: 2 },  // 8분음표
+            { key: 'D', time: 13019, botIndex: 2 },  // 8분음표
+            { key: 'W', time: 13253, botIndex: 2 },  // 16분음표
+            { key: 'A', time: 13370, botIndex: 2 },  // 8분음표
+            { key: 'S', time: 13605, botIndex: 2 },  // 8분음표
+            { key: 'D', time: 13839, botIndex: 2 },  // 16분음표
+            { key: 'W', time: 13956, botIndex: 2 },  // 16분음표
+            { key: 'A', time: 14073, botIndex: 2 },  // 16분음표
+            { key: 'S', time: 14191, botIndex: 2 },  // 16분음표
+            { key: 'D', time: 14308, botIndex: 2 },  // 16분음표
+            { key: 'W', time: 14425, botIndex: 2 },  // 16분음표
+            { key: 'A', time: 14542, botIndex: 2 },  // 16분음표
+            { key: 'S', time: 14659, botIndex: 2 },  // 16분음표
+            { key: 'D', time: 14776, botIndex: 2 },  // 16분음표
+
+            // RUV
+            { key: 'W', time: 14900, botIndex: 1 },   // 파
+            { key: 'A', time: 15250, botIndex: 1 },   // 라
+            { key: 'S', time: 15550, botIndex: 1 },   // 시
+            { key: 'D', time: 15750, botIndex: 1 },   // 도
+            { key: 'W', time: 16150, botIndex: 1 },   // 시
+
+            { key: 'A', time: 16550, botIndex: 1 },   // 파
+            { key: 'S', time: 16850, botIndex: 1 },   // 라
+            { key: 'D', time: 17150, botIndex: 1 },   // 시
+            { key: 'W', time: 17350, botIndex: 1 },   // 도
+            { key: 'A', time: 17750, botIndex: 1 },   // 시
+
+            { key: 'A', time: 18250, botIndex: 1 },   // 파
+            { key: 'S', time: 18550, botIndex: 1 },   // 라
+            { key: 'D', time: 18750, botIndex: 1 },   // 시
+            { key: 'W', time: 19150, botIndex: 1 },   // 도
+            { key: 'A', time: 19550, botIndex: 1 },   // 시
+
+            { key: 'A', time: 19950, botIndex: 1 },   // 8분음표
+            { key: 'S', time: 20184, botIndex: 1 },   // 8분음표
+            { key: 'D', time: 20419, botIndex: 1 },   // 8분음표
+            { key: 'W', time: 20653, botIndex: 1 },   // 16분음표
+            { key: 'A', time: 20770, botIndex: 1 },   // 8분음표
+            { key: 'S', time: 21005, botIndex: 1 },   // 8분음표
+            { key: 'D', time: 21239, botIndex: 1 },   // 16분음표
+            { key: 'W', time: 21356, botIndex: 1 },   // 16분음표
+            { key: 'A', time: 21473, botIndex: 1 },   // 16분음표
+            { key: 'S', time: 21591, botIndex: 1 },   // 16분음표
+            { key: 'D', time: 21708, botIndex: 1 },   // 16분음표
+
+            // SELEVER
+            { key: 'W', time: 21850, botIndex: 2 },   // 파
+            { key: 'A', time: 22150, botIndex: 2 },   // 라
+            { key: 'S', time: 22450, botIndex: 2 },   // 시
+            { key: 'D', time: 22650, botIndex: 2 },   // 도
+            { key: 'W', time: 23050, botIndex: 2 },   // 시
+
+            { key: 'A', time: 23650, botIndex: 2 },   // 파
+            { key: 'S', time: 23950, botIndex: 2 },   // 라
+            { key: 'D', time: 24250, botIndex: 2 },   // 시
+            { key: 'W', time: 24450, botIndex: 2 },   // 도
+            { key: 'A', time: 24850, botIndex: 2 },   // 시
+
+            { key: 'A', time: 25350, botIndex: 2 },   // 파
+            { key: 'S', time: 25650, botIndex: 2 },   // 라
+            { key: 'D', time: 25850, botIndex: 2 },   // 시
+            { key: 'W', time: 26250, botIndex: 2 },   // 도
+            { key: 'A', time: 26650, botIndex: 2 },   // 시
+
+            { key: 'A', time: 27050, botIndex: 2 },   // 8분음표
+            { key: 'S', time: 27284, botIndex: 2 },   // 8분음표
+            { key: 'D', time: 27519, botIndex: 2 },   // 8분음표
+            { key: 'W', time: 27753, botIndex: 2 },   // 16분음표
+            { key: 'A', time: 27870, botIndex: 2 },   // 8분음표
+            { key: 'S', time: 28105, botIndex: 2 },   // 8분음표
+            { key: 'D', time: 28339, botIndex: 2 },   // 16분음표
+            { key: 'W', time: 28456, botIndex: 2 },   // 16분음표
+            { key: 'A', time: 28573, botIndex: 2 },   // 16분음표
+            { key: 'S', time: 28691, botIndex: 2 },   // 16분음표
+            { key: 'D', time: 28808, botIndex: 2 },   // 16분음표
+            { key: 'W', time: 28925, botIndex: 2 },   // 16분음표
+            { key: 'A', time: 29042, botIndex: 2 },   // 16분음표
+            { key: 'S', time: 29159, botIndex: 2 },   // 16분음표
+            { key: 'D', time: 29276, botIndex: 2 },   // 16분음표
+
+            // 독주
+            // RUV
+            { key: 'A', time: 29400, botIndex: 1 },
+            { key: 'S', time: 29632, botIndex: 1 }, // 29400 + 232
+            { key: 'D', time: 29864, botIndex: 1 }, // 29632 + 232
+            { key: 'W', time: 30096, botIndex: 1 }, // 29864 + 232
+            { key: 'A', time: 30328, botIndex: 1 }, // 30096 + 232
+            { key: 'S', time: 30560, botIndex: 1 }, // 30328 + 232
+            { key: 'A', time: 30792, botIndex: 1 }, // 30560 + 232
+            { key: 'A', time: 31024, botIndex: 1 }, // 30792 + 232
+
+            // SELEVER
+            { key: 'A', time: 31256, botIndex: 2 }, // 31024 + 232
+            { key: 'S', time: 31488, botIndex: 2 }, // 31256 + 232
+            { key: 'D', time: 31720, botIndex: 2 }, // 31488 + 232
+            { key: 'W', time: 31952, botIndex: 2 }, // 31720 + 232
+            { key: 'A', time: 32184, botIndex: 2 }, // 31952 + 232
+            { key: 'S', time: 32416, botIndex: 2 }, // 32184 + 232
+            { key: 'A', time: 32648, botIndex: 2 }, // 32416 + 232
+            { key: 'A', time: 32880, botIndex: 2 }, // 32648 + 232
+
+            // 합주
+            // RUV
+            { key: 'A', time: 33344, botIndex: 1 },
+            { key: 'S', time: 33460, botIndex: 1 },
+            { key: 'D', time: 33577, botIndex: 1 },
+            { key: 'W', time: 33693, botIndex: 1 },
+            { key: 'A', time: 33809, botIndex: 1 },
+            { key: 'S', time: 33925, botIndex: 1 },
+            { key: 'D', time: 34041, botIndex: 1 },
+            { key: 'W', time: 34158, botIndex: 1 },
+
+            { key: 'A', time: 34274, botIndex: 1 }, // 반복 추가 시작
+            { key: 'S', time: 34390, botIndex: 1 },
+            { key: 'D', time: 34506, botIndex: 1 },
+            { key: 'W', time: 34622, botIndex: 1 },
+            { key: 'A', time: 34739, botIndex: 1 },
+            { key: 'S', time: 34855, botIndex: 1 },
+            { key: 'D', time: 34971, botIndex: 1 },
+            { key: 'W', time: 35087, botIndex: 1 },
+
+            // SELEVER
+            { key: 'A', time: 35203, botIndex: 2 },
+            { key: 'S', time: 35319, botIndex: 2 },
+            { key: 'D', time: 35435, botIndex: 2 },
+            { key: 'W', time: 35551, botIndex: 2 },
+            { key: 'A', time: 35668, botIndex: 2 },
+            { key: 'S', time: 35784, botIndex: 2 },
+            { key: 'D', time: 35900, botIndex: 2 },
+
+            { key: 'A', time: 36132, botIndex: 2 }, // 반복 추가 시작
+            { key: 'S', time: 36248, botIndex: 2 },
+            { key: 'D', time: 36364, botIndex: 2 },
+            { key: 'W', time: 36480, botIndex: 2 },
+            { key: 'A', time: 36597, botIndex: 2 },
+            { key: 'S', time: 36713, botIndex: 2 },
+            { key: 'D', time: 36829, botIndex: 2 },
+
+            // 독주
+            // SELEVER
+            { key: 'A', time: 37100, botIndex: 2 },
+            { key: 'S', time: 37332, botIndex: 2 }, // 37100 + 232
+            { key: 'D', time: 37564, botIndex: 2 }, // 37332 + 232
+            { key: 'W', time: 37796, botIndex: 2 }, // 37564 + 232
+            { key: 'A', time: 38028, botIndex: 2 }, // 37796 + 232
+            { key: 'S', time: 38260, botIndex: 2 }, // 38028 + 232
+            { key: 'D', time: 38492, botIndex: 2 }, // 38260 + 232
+
+            { key: 'A', time: 38956, botIndex: 1 }, // 38724 + 232
+            { key: 'S', time: 39188, botIndex: 1 }, // 38956 + 232
+            { key: 'D', time: 39420, botIndex: 1 }, // 39188 + 232
+            { key: 'W', time: 39652, botIndex: 1 }, // 39420 + 232
+            { key: 'A', time: 39884, botIndex: 1 }, // 39652 + 232
+            { key: 'S', time: 40116, botIndex: 1 }, // 39884 + 232
+            { key: 'D', time: 40348, botIndex: 1 }, // 40116 + 232
+            { key: 'W', time: 40580, botIndex: 1 },  // 40348 + 232
+
+            // 합주
+            // RUV
+            { key: 'A', time: 40700, botIndex: 1 },
+            { key: 'S', time: 40816, botIndex: 1 },
+            { key: 'D', time: 40933, botIndex: 1 },
+            { key: 'W', time: 41049, botIndex: 1 },
+            { key: 'A', time: 41165, botIndex: 1 },
+            { key: 'S', time: 41281, botIndex: 1 },
+            { key: 'D', time: 41397, botIndex: 1 },
+
+            { key: 'A', time: 41630, botIndex: 1 },
+            { key: 'S', time: 41746, botIndex: 1 },
+            { key: 'D', time: 41862, botIndex: 1 },
+            { key: 'W', time: 41978, botIndex: 1 },
+            { key: 'A', time: 42095, botIndex: 1 },
+            { key: 'S', time: 42211, botIndex: 1 },
+            { key: 'D', time: 42327, botIndex: 1 },
+
+            // SELEVER
+            { key: 'A', time: 42560, botIndex: 2 },
+            { key: 'S', time: 42676, botIndex: 2 },
+            { key: 'D', time: 42792, botIndex: 2 },
+            { key: 'W', time: 42908, botIndex: 2 },
+            { key: 'A', time: 43025, botIndex: 2 },
+            { key: 'S', time: 43141, botIndex: 2 },
+            { key: 'D', time: 43257, botIndex: 2 },
+
+            { key: 'A', time: 43490, botIndex: 2 },
+            { key: 'S', time: 43606, botIndex: 2 },
+            { key: 'D', time: 43722, botIndex: 2 },
+            { key: 'W', time: 43838, botIndex: 2 },
+            { key: 'A', time: 43955, botIndex: 2 },
+            { key: 'S', time: 44071, botIndex: 2 },
+            { key: 'D', time: 44187, botIndex: 2 },
+
+            // RUV
+            { key: 'W', time: 44400, botIndex: 1 },
+            { key: 'A', time: 44516, botIndex: 1 },
+            { key: 'S', time: 44632, botIndex: 1 },
+            { key: 'W', time: 44748, botIndex: 1 },
+            { key: 'A', time: 44864, botIndex: 1 },
+            { key: 'S', time: 44980, botIndex: 1 },
+            { key: 'W', time: 45096, botIndex: 1 },
+            { key: 'A', time: 45212, botIndex: 1 },
+            { key: 'S', time: 45328, botIndex: 1 },
+            { key: 'D', time: 45444, botIndex: 1 },
+            { key: 'W', time: 45560, botIndex: 1 },
+            { key: 'A', time: 45676, botIndex: 1 },
+            { key: 'S', time: 45792, botIndex: 1 },
+            { key: 'D', time: 45908, botIndex: 1 },
+            { key: 'W', time: 46024, botIndex: 1 },
+            { key: 'W', time: 46140, botIndex: 1 },
+            { key: 'A', time: 46256, botIndex: 1 },
+            { key: 'S', time: 46372, botIndex: 1 },
+            { key: 'D', time: 46488, botIndex: 1 },
+            { key: 'W', time: 46600, botIndex: 1 },
+
+            { key: 'A', time: 46716, botIndex: 1 },
+            { key: 'S', time: 46832, botIndex: 1 },
+            { key: 'D', time: 46948, botIndex: 1 },
+            { key: 'W', time: 47064, botIndex: 1 },
+            { key: 'A', time: 47180, botIndex: 1 },
+            { key: 'S', time: 47296, botIndex: 1 },
+            { key: 'D', time: 47412, botIndex: 1 },
+            { key: 'W', time: 47528, botIndex: 1 },
+
+
+            // SELEVER
+            { key: 'W', time: 47700, botIndex: 2 },
+            { key: 'A', time: 47816, botIndex: 2 }, // 47700 + 116
+            { key: 'S', time: 47932, botIndex: 2 }, // 47816 + 116
+            { key: 'W', time: 48048, botIndex: 2 }, // 47932 + 116
+            { key: 'A', time: 48164, botIndex: 2 }, // 48048 + 116
+            { key: 'S', time: 48280, botIndex: 2 }, // 48164 + 116
+            { key: 'W', time: 48396, botIndex: 2 }, // 48280 + 116
+            { key: 'A', time: 48512, botIndex: 2 }, // 48396 + 116
+            { key: 'S', time: 48628, botIndex: 2 }, // 48512 + 116
+            { key: 'D', time: 48744, botIndex: 2 }, // 48628 + 116
+            { key: 'W', time: 48860, botIndex: 2 }, // 48744 + 116
+            { key: 'A', time: 48976, botIndex: 2 }, // 48860 + 116
+            { key: 'S', time: 49092, botIndex: 2 }, // 48976 + 116
+            { key: 'D', time: 49208, botIndex: 2 }, // 49092 + 116
+            { key: 'W', time: 49324, botIndex: 2 }, // 49208 + 116
+            { key: 'W', time: 49440, botIndex: 2 }, // 49324 + 116
+            { key: 'A', time: 49556, botIndex: 2 }, // 49440 + 116
+            { key: 'S', time: 49672, botIndex: 2 }, // 49556 + 116
+            { key: 'D', time: 49788, botIndex: 2 }, // 49672 + 116
+
+            { key: 'A', time: 49904, botIndex: 1 }, // 49788 + 116
+            { key: 'S', time: 50020, botIndex: 1 }, // 49904 + 116
+            { key: 'D', time: 50136, botIndex: 1 }, // 50020 + 116
+            { key: 'W', time: 50252, botIndex: 1 }, // 50136 + 116
+            { key: 'A', time: 50368, botIndex: 1 }, // 50252 + 116
+            { key: 'S', time: 50484, botIndex: 1 }, // 50368 + 116
+            { key: 'D', time: 50600, botIndex: 1 }, // 50484 + 116
+            { key: 'W', time: 50716, botIndex: 1 }  // 50600 + 116
+        ];
+
+
+        let currentIndex = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.5; // Set to 50% of window width
+            canvas.height = window.innerHeight * 0.95;
+            sectionWidth = canvas.width / 8; // Divide into eight sections
+            drawStartMessage();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawStartMessage() {
+            const fontSize = Math.min(canvas.width, canvas.height) * 0.05;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = `${fontSize}px Arial`; // Changed to Arial for broader compatibility
+            ctx.fillStyle = "#FFF";
+            ctx.textAlign = "center";
+            ctx.fillText("PRESS ENTER TO START", canvas.width / 2, canvas.height / 2);
+        }
+
+        function drawLines() {
+            // Clear the canvas before drawing new lines and keys
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#FFF";
+            ctx.lineWidth = 2;
+
+            // Draw horizontal lines
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.06);
+            ctx.lineTo(canvas.width, canvas.height * 0.06);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.9);
+            ctx.lineTo(canvas.width, canvas.height * 0.9);
+            ctx.stroke();
+
+            // Draw score
+            const scoreFontSize = Math.min(canvas.width, canvas.height) * 0.02;
+            ctx.font = `${scoreFontSize}px Arial`;
+            ctx.fillStyle = "#FFF";
+            ctx.fillText(`SCORE: ${score}`, sectionWidth / 2, canvas.height * 0.03);
+        }
+
+        function generateFallingKey() {
+            if (currentIndex < predefinedKeys.length) {
+                const keyData = predefinedKeys[currentIndex];
+                const key = keyData.key;
+
+                let xPosition;
+                if (keys.indexOf(key) >= 2) {
+                    xPosition = sectionWidth * (keys.indexOf(key) + 4) + sectionWidth / 2;
+                } else {
+                    xPosition = sectionWidth * keys.indexOf(key) + sectionWidth / 2;
+                }
+
+                const yPosition = canvas.height * 0.065;
+                fallingKeys.push({ key, x: xPosition, y: yPosition, botIndex: keyData.botIndex });
+
+                currentIndex++;
+            }
+        }
+
+        let backgroundMoved = false; // Flag to track if the background has moved
+        let backgroundMovedByUser = false; // Flag to track if the background has moved by user input
+        let timeoutId = null; // Existing timeout ID
+        let idleTimeoutId = null; // New timeout ID for idle state
+
+        // Function to set Ruv_idle.gif
+        function setIdleGif() {
+            animatedGif_Ruv.src = "../images/game/3/Ruv_idle.gif";
+        }
+
+        // Function to reset idle timer
+        function resetIdleTimer() {
+            if (idleTimeoutId) {
+                clearTimeout(idleTimeoutId);
+            }
+            idleTimeoutId = setTimeout(() => {
+                setIdleGif();
+            }, 500);
+        }
+
+        function drawFallingKeys() {
+            const keyFontSize = Math.min(canvas.width, canvas.height) * 0.03;
+
+            // 텍스트 스타일 설정
+            ctx.font = `${keyFontSize}px 'Bauhaus 93'`;
+
+            fallingKeys.forEach((keyObj) => {
+                // 조건에 따라 색상 설정
+                if (keyObj.botIndex === 1) {
+                    ctx.fillStyle = "#000"; // 검정색
+                } else if (keyObj.botIndex === 2) {
+                    ctx.fillStyle = "#00F"; // 파란색
+                }
+
+                // 텍스트 렌더링
+                ctx.fillText(keyObj.key, keyObj.x, keyObj.y);
+
+                // 키 이동 (아래로 떨어짐)
+                keyObj.y += 5; // 키가 떨어지는 속도
+
+                // 특정 범위에 도달했을 때 botIndex 처리
+                if (keyObj.y >= canvas.height * 0.8 && keyObj.y <= canvas.height * 0.9) {
+                    if (keyObj.botIndex === 1) {
+                        // RUV 애니메이션 처리
+                        switch (keyObj.key) {
+                            case 'W':
+                                animatedGif_Ruv.src = "../images/game/3/Ruv_up.gif";
+                                break;
+                            case 'A':
+                                animatedGif_Ruv.src = "../images/game/3/Ruv_left.gif";
+                                break;
+                            case 'S':
+                                animatedGif_Ruv.src = "../images/game/3/Ruv_down.gif";
+                                break;
+                            case 'D':
+                                animatedGif_Ruv.src = "../images/game/3/Ruv_right.gif";
+                                break;
+                            default:
+                                animatedGif_Ruv.src = "../images/game/3/Ruv_idle.gif";
+                                break;
+                        }
+
+                        // 배경 움직임 애니메이션 (한 번만 실행)
+                        if (!backgroundMoved) {
+                            animateBackgroundMove();
+                            backgroundMoved = true; // 플래그 설정
+                        }
+
+                        // GIF를 0.5초 후 idle 상태로 복귀
+                        if (idleTimeoutId) {
+                            clearTimeout(idleTimeoutId);
+                        }
+                        idleTimeoutId = setTimeout(() => {
+                            setIdleGif();
+                        }, 500);
+
+                    } else if (keyObj.botIndex === 2) {
+                        // SELEVER 애니메이션 처리
+                        if (backgroundMoved) {
+                            backgroundMoved = false;
+                            animateBackgroundReturn();
+                        }
+
+                        if (!backgroundMovedByUser) {
+                            animateBackgroundMoveByUser();
+                            backgroundMovedByUser = true;
+                        }
+                    }
+                }
+            });
+
+            // 화면을 벗어난 키 제거
+            fallingKeys = fallingKeys.filter(keyObj => keyObj.y < canvas.height * 0.9);
+        }
+
+
+        // Function to animate the background movement to the left
+        function animateBackgroundMove() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move in pixels
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveLeft = moveDistance * progress;
+
+                // Move the background left by the calculated amount
+                backgroundImage.style.left = `${initialLeft - moveLeft}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // Function to animate the background movement back to the original position
+        function animateBackgroundReturn() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move back to original position
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveBack = moveDistance * progress;
+
+                // Move the background back to the original position
+                backgroundImage.style.left = `${initialLeft + moveBack}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    // Ensure the background is at the original position
+                    backgroundImage.style.left = `${initialLeft + moveDistance}px`;
+                    backgroundMovedByUser = false; // Allow user animation again if needed
+                    // 애니메이션 종료 후 아이들 타이머 리셋
+                    resetIdleTimer();
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function checkKeyPress(e) {
+            const pressedKey = e.key.toUpperCase();
+
+            // 키 입력 시 아이들 타이머 리셋
+            resetIdleTimer();
+
+            fallingKeys.forEach((keyObj, index) => {
+                if (keyObj.botIndex === 2) {
+                    // Animate the movement to the left only once
+                    if (!backgroundMovedByUser) {
+                        animateBackgroundMoveByUser();
+                        backgroundMovedByUser = true; // Set the flag to true to prevent future movement
+                    }
+                    if (keyObj.key === pressedKey && keyObj.y >= canvas.height * 0.85 && keyObj.y <= canvas.height * 0.9) {
+                        score += 10;
+                        fallingKeys.splice(index, 1); // Remove the key if pressed correctly
+                    }
+                }
+            });
+
+            // Update GIF based on pressed key only for botIndex 2
+            if (fallingKeys.some(keyObj => keyObj.botIndex === 2)) {
+                switch (pressedKey) {
+                    case 'W':
+                        animatedGif_Selever.src = "../images/game/3/Selever_up.gif";
+                        break;
+                    case 'A':
+                        animatedGif_Selever.src = "../images/game/3/Selever_left.gif";
+                        break;
+                    case 'S':
+                        animatedGif_Selever.src = "../images/game/3/Selever_down.gif";
+                        break;
+                    case 'D':
+                        animatedGif_Selever.src = "../images/game/3/Selever_right.gif";
+                        break;
+                    default:
+                        animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
+                        break;
+                }
+
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
+                // Reset GIF to idle after 0.5 seconds
+                timeoutId = setTimeout(() => {
+                    animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
+                }, 500);
+            }
+        }
+
+        // Function to animate the background movement to the left by user action
+        function animateBackgroundMoveByUser() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move in pixels
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveLeft = moveDistance * progress;
+
+                // Move the background left by the calculated amount
+                backgroundImage.style.left = `${initialLeft + moveLeft}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    // Keep the background at its moved position
+                    backgroundImage.style.left = `${initialLeft + moveDistance}px`;
+                    // 애니메이션 종료 후 아이들 타이머 리셋
+                    resetIdleTimer();
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // Function to animate the background movement back to the original position by user action
+        function animateBackgroundReturnByUser() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move back to original position
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveBack = moveDistance * progress;
+
+                // Move the background back to the original position
+                backgroundImage.style.left = `${initialLeft - moveBack}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    // Ensure the background is at the original position
+                    backgroundImage.style.left = `${initialLeft - moveDistance}px`;
+                    backgroundMovedByUser = false; // Allow user animation again if needed
+                    // 애니메이션 종료 후 아이들 타이머 리셋
+                    resetIdleTimer();
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function checkKeyPress(e) {
+            const pressedKey = e.key.toUpperCase();
+
+            fallingKeys.forEach((keyObj, index) => {
+                if (keyObj.botIndex === 2) {
+                    // Animate the movement to the left only once
+                    if (!backgroundMovedByUser) {
+                        animateBackgroundMoveByUser();
+                        backgroundMovedByUser = true; // Set the flag to true to prevent future movement
+                    }
+                    if (keyObj.key === pressedKey && keyObj.y >= canvas.height * 0.85 && keyObj.y <= canvas.height * 0.9) {
+                        score += 10;
+                        fallingKeys.splice(index, 1); // Remove the key if pressed correctly
+                    }
+                }
+            });
+
+            // Update GIF based on pressed key
+            switch (pressedKey) {
+                case 'W':
+                    animatedGif_Selever.src = "../images/game/3/Selever_up.gif";
+                    break;
+                case 'A':
+                    animatedGif_Selever.src = "../images/game/3/Selever_left.gif";
+                    break;
+                case 'S':
+                    animatedGif_Selever.src = "../images/game/3/Selever_down.gif";
+                    break;
+                case 'D':
+                    animatedGif_Selever.src = "../images/game/3/Selever_right.gif";
+                    break;
+                default:
+                    animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
+                    break;
+            }
+
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Reset GIF to idle after 0.5 seconds
+            timeoutId = setTimeout(() => {
+                animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
+            }, 500);
+        }
+
+        // Function to animate the background movement to the left by user action
+        function animateBackgroundMoveByUser() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move in pixels
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveLeft = moveDistance * progress;
+
+                // Move the background left by the calculated amount
+                backgroundImage.style.left = `${initialLeft + moveLeft}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    // Keep the background at its moved position
+                    backgroundImage.style.left = `${initialLeft + moveDistance}px`;
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // Function to animate the background movement back to the original position by user action
+        function animateBackgroundReturnByUser() {
+            let startTime = null;
+            const duration = 500; // Duration of animation in milliseconds
+            const moveDistance = 30; // Distance to move back to original position
+            const initialLeft = parseInt(backgroundImage.style.left) || 0;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // Calculate progress
+                const progress = Math.min(elapsed / duration, 1);
+                const moveBack = moveDistance * progress;
+
+                // Move the background back to the original position
+                backgroundImage.style.left = `${initialLeft - moveBack}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+
+        let enterPressed = false;
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !enterPressed) {
+                enterPressed = true;
+                startCountdown();
+            } else {
+                checkKeyPress(e);
+            }
+        });
+
+        function startCountdown() {
+            countdownIndex = 0;
+            countdownY = -50; // Start position above the canvas
+            const beepAudio = new Audio('../music/Ready.mp3');
+            beepAudio.volume = 0.5;
+            beepAudio.play();
+            countdownInterval = setInterval(() => {
+                if (countdownIndex < countdown.length) {
+                    moveWord(countdown[countdownIndex]);
+                    countdownIndex++;
+                } else {
+                    clearInterval(countdownInterval);
+                    startGame();
+                }
+            }, 500);
+        }
+
+        function moveWord(message) {
+            countdownY = 300; // Reset position for each new message
+            const startTime = Date.now();
+            const duration = 200; // Duration of animation in milliseconds
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                countdownY = 200 + (canvas.height / 2 - 200) * progress;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawLines();
+                drawFallingKeys();
+
+                const countdownFontSize = Math.min(canvas.width, canvas.height) * 0.04;
+                ctx.font = `${countdownFontSize}px Arial`;
+                ctx.fillStyle = "#FFF";
+                ctx.textAlign = "center";
+                ctx.fillText(message, canvas.width / 2, countdownY);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        function startGame() {
+            // Transition from black background to image background
+            backgroundBlack.style.opacity = "0"; // Fade out black background
+            backgroundImage.style.opacity = "1"; // Fade in image background
+
+            // Show the GIFs when the game starts
+            if (!gifShown) {
+                animatedGif_Ruv.style.display = "block";
+                animatedGif_Selever.style.display = "block";
+                gifShown = true;
+            }
+
+            // Play background music
+            const beepAudio = new Audio('../music/Zavodila.mp3');
+            beepAudio.volume = 0.5;
+            beepAudio.play();
+
+            // Generate keys based on predefined timing
+            predefinedKeys.forEach((keyData) => {
+                setTimeout(() => {
+                    generateFallingKey();
+                }, keyData.time);
+            });
+
+            // Start the game loop
+            function gameLoop() {
+                drawLines();
+                drawFallingKeys();
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+    </script>
+</body>
+
+</html>

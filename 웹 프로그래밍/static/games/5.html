@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Canvas Game</title>
+    <style>
+        #canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+            height: 95vh;
+            width: calc(95vh / 2);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions and scale for better quality
+            const scale = window.devicePixelRatio || 1;
+            const ROWS = 20;
+            const BLOCK_SIZE = (95 * window.innerHeight / 100) / ROWS;
+            const COLS = Math.floor(canvas.clientWidth / BLOCK_SIZE);
+
+            canvas.width = COLS * BLOCK_SIZE * scale;
+            canvas.height = ROWS * BLOCK_SIZE * scale;
+            canvas.style.width = `${COLS * BLOCK_SIZE}px`;
+            canvas.style.height = `${ROWS * BLOCK_SIZE}px`;
+            ctx.scale(scale, scale);
+
+            // Colors for tetrominoes
+            const COLORS = [
+                'cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'
+            ];
+
+            // Tetromino shapes
+            const TETROMINOES = [
+                [[1, 1, 1, 1]], // I
+                [[1, 0, 0], [1, 1, 1]], // J
+                [[0, 0, 1], [1, 1, 1]], // L
+                [[1, 1], [1, 1]], // O
+                [[0, 1, 1], [1, 1, 0]], // S
+                [[0, 1, 0], [1, 1, 1]], // T
+                [[1, 1, 0], [0, 1, 1]]  // Z
+            ];
+
+            // 선택 조각
+            let currentPiece;
+            let gameBoard = createBoard(ROWS, COLS);
+            let gameStarted = false;
+            let score = 0;
+
+            function createBoard(rows, cols) {
+                return Array.from({ length: rows }, () => Array(cols).fill(0));
+            }
+
+            function createPiece() {
+                const typeIndex = Math.floor(Math.random() * TETROMINOES.length);
+                return {
+                    shape: TETROMINOES[typeIndex],
+                    color: COLORS[typeIndex],
+                    x: Math.floor(COLS / 2) - 1,
+                    y: 0
+                };
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width / scale, canvas.height / scale);
+                drawBackgroundLines();
+                drawBoard();
+                if (gameStarted) { drawScore(); }
+                if (gameStarted) {
+                    drawPiece(currentPiece);
+                } else {
+                    drawStartMessage();
+                }
+            }
+
+            function drawBackgroundLines() {
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 0.5;
+                for (let x = 0; x <= COLS; x++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * BLOCK_SIZE, 0);
+                    ctx.lineTo(x * BLOCK_SIZE, ROWS * BLOCK_SIZE);
+                    ctx.stroke();
+                }
+            }
+
+            function drawBoard() {
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        if (gameBoard[y][x] !== 0) {
+                            ctx.fillStyle = gameBoard[y][x];
+                            ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                            ctx.strokeStyle = '#ddd';
+                            ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                        }
+                    }
+                }
+            }
+
+            function drawPiece(piece) {
+                piece.shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            ctx.fillStyle = piece.color;
+                            ctx.fillRect((piece.x + x) * BLOCK_SIZE, (piece.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                            ctx.strokeStyle = '#ddd';
+                            ctx.strokeRect((piece.x + x) * BLOCK_SIZE, (piece.y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                        }
+                    });
+                });
+            }
+
+            function drawScore() {
+                ctx.font = "20px Arial";
+                ctx.fillStyle = "#000";
+                ctx.textAlign = "left";
+                ctx.fillText(`Score: ${score}`, 10, 30);
+            }
+
+            const TetrisAudio = new Audio('../music/Tetris.mp3');
+
+            function drawStartMessage() {
+                ctx.font = "35px Migae";
+                ctx.fillStyle = "#000";
+                ctx.textAlign = "center";
+                ctx.fillText("PRESS ENTER\nTO START", canvas.width / (2 * scale), canvas.height / (2 * scale));
+                TetrisAudio.pause();
+
+            }
+
+            // Move piece
+            function movePiece(dir) {
+                currentPiece.x += dir;
+                if (collision()) {
+                    currentPiece.x -= dir;
+                }
+            }
+
+            // Drop piece
+            function dropPiece() {
+                currentPiece.y++;
+                if (collision()) {
+                    currentPiece.y--;
+                    placePiece();
+                    currentPiece = createPiece();
+                    if (collision()) {
+                        resetGame();
+                    }
+                }
+            }
+
+            // Drop piece to the bottom
+            function hardDropPiece() {
+                while (!collision()) {
+                    currentPiece.y++;
+                }
+                currentPiece.y--;
+                placePiece();
+                currentPiece = createPiece();
+                if (collision()) {
+                    resetGame();
+                }
+            }
+
+            // Rotate piece
+            function rotatePiece() {
+                const prevShape = currentPiece.shape;
+                currentPiece.shape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i])).reverse();
+                if (collision()) {
+                    currentPiece.shape = prevShape;
+                }
+            }
+
+            const beepAudio = new Audio('../music/Beep.mp3');
+            beepAudio.volume = 0.5;
+
+            // 충돌 시 한 번만 재생
+            function collision() {
+                for (let y = 0; y < currentPiece.shape.length; y++) {
+                    for (let x = 0; x < currentPiece.shape[y].length; x++) {
+                        if (currentPiece.shape[y][x] !== 0) {
+                            const newX = currentPiece.x + x;
+                            const newY = currentPiece.y + y;
+                            if (
+                                newX < 0 ||
+                                newX >= COLS ||
+                                newY >= ROWS ||
+                                (gameBoard[newY] && gameBoard[newY][newX] !== 0)
+                            ) {
+                                if (beepAudio.paused) {
+                                    beepAudio.play();
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // 배치 메서드
+            function placePiece() {
+                currentPiece.shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            gameBoard[currentPiece.y + y][currentPiece.x + x] = currentPiece.color;
+                        }
+                    });
+                });
+                clearLines();
+            }
+
+            function shakeScreen() {
+            const intensity = 5; // 흔들림 강도
+            const duration = 300; // 흔들림 지속 시간 (밀리초)
+            let startTime = Date.now();
+
+            function shake() {
+                const elapsed = Date.now() - startTime;
+                if (elapsed < duration) {
+                    const offsetX = (Math.random() - 0.5) * intensity;
+                    const offsetY = (Math.random() - 0.5) * intensity;
+                    canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                    requestAnimationFrame(shake);
+                } else {
+                    canvas.style.transform = ''; // 흔들림 종료 후 원래 위치로 복원
+                }
+            }
+
+            function popScreen() {
+                const duration = 100; // 팝업 효과 지속 시간 (밀리초)
+                canvas.style.transform = 'scale(1.1)'; // 화면 확대
+
+                setTimeout(() => {
+                    canvas.style.transform = 'scale(1)'; // 원래 크기로 복원
+                }, duration);
+            }
+
+
+            shake();
+        }
+
+            let Twinkle = new Audio('../music/Twinkle.mp3');
+
+            function clearLines() {
+                for (let y = ROWS - 1; y >= 0; y--) {
+                    if (gameBoard[y].every(value => value !== 0)) {
+                        gameBoard.splice(y, 1);
+                        gameBoard.unshift(Array(COLS).fill(0));
+                        score += 10;
+                        playTwinkle();
+                        shakeScreen();
+                    }
+                }
+            }
+
+            function playTwinkle() {
+                if (Twinkle.paused) {
+                    Twinkle.play().catch((error) => {
+                        console.log('오디오 재생 오류:', error);
+                    });
+                }
+            }
+
+            // Reset the game
+            function resetGame() {
+                gameBoard = createBoard(ROWS, COLS);
+                currentPiece = createPiece();
+                gameStarted = false;
+                score = 0;
+            }
+
+            // Main game loop
+            function gameLoop() {
+                if (gameStarted) {
+                    draw();
+                    dropPiece();
+                } else {
+                    draw();
+                }
+                const dropSpeed = 500 - Math.floor(score / 100) * 50;
+                setTimeout(gameLoop, Math.max(dropSpeed, 100));
+            }
+
+            gameLoop();
+
+            // Event listeners for key presses
+            document.addEventListener('keydown', (e) => {
+                if (!gameStarted && e.key === 'Enter') {
+                    gameStarted = true;
+                    currentPiece = createPiece();
+
+                    TetrisAudio.currentTime = 0;
+                    TetrisAudio.volume = 0.5;
+                    TetrisAudio.loop = true;
+                    TetrisAudio.play();
+                } else if (gameStarted) {
+                    if (e.key === 'ArrowLeft') {
+                        movePiece(-1);
+                    } else if (e.key === 'ArrowRight') {
+                        movePiece(1);
+                    } else if (e.key === 'ArrowDown') {
+                        dropPiece();
+                    } else if (e.key === 'ArrowUp') {
+                        rotatePiece();
+                    } else if (e.key === ' ') {
+                        hardDropPiece();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
