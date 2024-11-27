@@ -1,77 +1,82 @@
 <!doctype html>
 <html lang="kor">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        <title>JSPlayGround Info</title>
-        <link href="../static/css/bootstrap.min.css" rel="stylesheet">
-        <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
-        <link href="../static/css/mainTemplateCss.css" rel="stylesheet">
-    </head>
-    
-    <body>
-        <main>
-            <nav class="navbar navbar-expand-lg">
-                <div class="container">
-                    <!-- Brand Logo -->
-                    <a class="navbar-brand" href="{{ url_for('index') }}">
-                        <strong><span>JS</span> playground</strong>
-                    </a>                    
-                    
-                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                        <a href="{{ url_for('products') }}" class="bi-person custom-icon"></a>
-                    </div>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>JSPlayGround Info</title>
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="../static/css/mainTemplateCss.css" rel="stylesheet">
+</head>
+
+<body>
+    <main>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <!-- Brand Logo -->
+                <a class="navbar-brand" href="{{ url_for('index') }}">
+                    <strong><span>JS</span> playground</strong>
+                </a>
+
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <a href="{{ url_for('products') }}" class="bi-person custom-icon"></a>
                 </div>
-            </nav>
-            
-            <section class="slick-slideshow">   
-                <div class="slick-custom">
-                    <img src="../static/images/header/LogInBackgroundImg1.jpg" class="img-fluid" alt="">
-                    <div class="slick-bottom">
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-lg-6 col-10">
-                                    <h1 class="slick-title">Feel the Thrill of<br>JavaScript Gaming</h1>
-                                    <p class="lead text-white mt-lg-3 mb-lg-5">Unforgettable Fun, Endless Adventure.</p>                                    
-                                    <a href="{% if logInState == 1 %}{{ url_for('products') }}{% else %}{{ url_for('sign_in') }}{% endif %}" class="btn custom-btn">Enter Game</a>
-                                </div>
+            </div>
+        </nav>
+
+        <section class="slick-slideshow">
+            <div class="slick-custom">
+                <img src="../static/images/header/LogInBackgroundImg1.jpg" class="img-fluid" alt="">
+                <div class="slick-bottom">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-6 col-10">
+                                <h1 class="slick-title">Feel the Thrill of<br>JavaScript Gaming</h1>
+                                <p class="lead text-white mt-lg-3 mb-lg-5">Unforgettable Fun, Endless Adventure.</p>
+                                <a href="{% if logInState == 1 %}{{ url_for('products') }}{% else %}{{ url_for('sign_in') }}{% endif %}"
+                                    class="btn custom-btn">Enter Game</a>
                             </div>
                         </div>
                     </div>
-                </div> 
-            </section>
-        </main>
-
-        <footer class="site-footer">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-3 col-10 me-auto mb-4">
-                        <h4 class="text-white mb-3"> <a href="{{ url_for('index') }}">JS</a> playground</h4>
-                        <p class="copyright-text text-muted mt-lg-5 mb-4 mb-lg-0">SCH CSE_WEBPROGRAAMING</p>
-                        <p class="copyright-text">20234014 LeeEunJoeng</p>
-                    </div>
-        
-                    <div class="col-lg-5 col-8">
-                        <h5 class="text-white mb-3">Sitemap</h5>
-                        <ul class="footer-menu d-flex flex-wrap">
-                            <li class="footer-menu-item"><a href="{{ url_for('company') }}" class="footer-menu-link">Company Info</a></li>
-                            <li class="footer-menu-item"><a href="{{ url_for('contact') }}" class="footer-menu-link">Contact</a></li>
-                        </ul>
-                    </div>
-        
-                    <div class="col-lg-3 col-4">
-                        <h5 class="text-white mb-3">Social</h5>
-                        <ul class="social-icon">
-                            <li><a href="#" class="social-icon-link bi-youtube"></a></li>
-                            <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
-                            <li><a href="#" class="social-icon-link bi-instagram"></a></li>
-                            <li><a href="#" class="social-icon-link bi-skype"></a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
-        </footer>
-    </body>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-10 me-auto mb-4">
+                    <h4 class="text-white mb-3"> <a href="{{ url_for('index') }}">JS</a> playground</h4>
+                    <p class="copyright-text text-muted mt-lg-5 mb-4 mb-lg-0">SCH CSE_WEBPROGRAAMING</p>
+                    <p class="copyright-text">20234014 LeeEunJoeng</p>
+                </div>
+
+                <div class="col-lg-5 col-8">
+                    <h5 class="text-white mb-3">Sitemap</h5>
+                    <ul class="footer-menu d-flex flex-wrap">
+                        <li class="footer-menu-item"><a href="{{ url_for('company') }}" class="footer-menu-link">Company
+                                Info</a></li>
+                        <li class="footer-menu-item"><a href="{{ url_for('contact') }}"
+                                class="footer-menu-link">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-4">
+                    <h5 class="text-white mb-3">Social</h5>
+                    <ul class="social-icon">
+                        <li><a href="#" class="social-icon-link bi-youtube"></a></li>
+                        <li><a href="#" class="social-icon-link bi-whatsapp"></a></li>
+                        <li><a href="#" class="social-icon-link bi-instagram"></a></li>
+                        <li><a href="#" class="social-icon-link bi-skype"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
 </html>

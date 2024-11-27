@@ -1,23 +1,26 @@
 <!doctype html>
 <html lang="kor">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <meta name="author" content="">
 
-        <title>JSPlayGround Info</title>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-        <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
-        <link href="{{ url_for('static', filename='css/mainTemplateCss.css') }}" rel="stylesheet">
-        
-    </head>
+    <title>JSPlayGround Info</title>
+
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/mainTemplateCss.css') }}" rel="stylesheet">
+
+</head>
+
 <body>
     <main>
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -40,14 +43,15 @@
                     </ul>
                     <div class="d-none d-lg-block">
                         {% if logInState != 0 %}
-                            <a href="{{ url_for('user_info') }}" class="bi-person custom-icon me-3"></a>
+                        <a href="{{ url_for('user_info') }}" class="bi-person custom-icon me-3"></a>
                         {% endif %}
-                    </div>     
+                    </div>
                 </div>
             </div>
         </nav>
 
-        <header class="site-header section-padding d-flex justify-content-center align-items-center" style="background-image: url('../static/images/slideshow/background2.jpeg'); background-size: cover; background-position: center; position: relative;">
+        <header class="site-header section-padding d-flex justify-content-center align-items-center"
+            style="background-image: url('../static/images/slideshow/background2.jpeg'); background-size: cover; background-position: center; position: relative;">
             <div class="hero-section container" style="position: relative; z-index: 2;">
                 <div class="row">
                     <div class="col-lg-10 col-12">
@@ -70,7 +74,8 @@
                     </div>
                     <div class="team-thumb d-flex align-items-center">
                         <!-- 게임 실행 iframe -->
-                         <iframe src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}" width="100%" height="600px" style="border: 5px solid black;"></iframe>
+                        <iframe src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}" width="100%"
+                            height="600px" style="border: 5px solid black;"></iframe>
                     </div>
                     <div class="col-lg-6 col-12">
                         <!-- 설명 컨테이너 -->
@@ -80,39 +85,43 @@
                                 <strong class="d-block mt-4 mb-2">Description</strong>
                                 <p class="lead mb-5">{{product_description}}</p>
                             </div>
-            
+
                             <!-- 점수 박스 -->
-                            <div class="score-box" style="border: 2px solid red; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            <div class="score-box"
+                                style="border: 2px solid red; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                                 <span id="score">0</span>
                             </div>
                         </div>
-                        
+
                         <!-- 버튼 컨테이너 -->
                         <div class="product-cart-thumb row align-items-center mt-4">
                             <div class="col-lg-6 col-12 mb-4 mb-lg-0">
-                                <a href="{{ url_for('product_detail', product_id=product_id) }}" class="btn custom-btn gameBtn-btn2" role="button">Retry</a>
+                                <a href="{{ url_for('product_detail', product_id=product_id) }}"
+                                    class="btn custom-btn gameBtn-btn2" role="button">Retry</a>
                             </div>
                             <div class="col-lg-6 col-12">
-                                <a href="{{ url_for('products') }}" class="btn custom-btn gameBtn-btn1" role="button">Back to Site</a>
+                                <a href="{{ url_for('products') }}" class="btn custom-btn gameBtn-btn1"
+                                    role="button">Back to Site</a>
                             </div>
                         </div>
-                    </div>                    
+                    </div>
                 </div>
             </div>
         </section>
-        
+
         <section class="related-product section-padding border-top">
             <div class="container">
                 <div class="row">
                     <div class="col-12">
                         <h3 class="mb-5">You might also like</h3>
                     </div>
-        
+
                     <!-- 첫 번째 게임 -->
                     <div class="col-lg-4 col-12 mb-3">
                         <div class="product-thumb">
                             <a href="{{ url_for('product_detail', product_id=1) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/1.png') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/4.jpg') }}{% endif %}" class="img-fluid product-image" alt="Product 1">
+                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/1.png') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/4.jpg') }}{% endif %}"
+                                    class="img-fluid product-image" alt="Product 1">
                             </a>
                             <div class="product-top d-flex">
                                 <a href="#" class="bi-heart-fill product-icon"></a>
@@ -125,12 +134,13 @@
                             </div>
                         </div>
                     </div>
-        
+
                     <!-- 두 번째 게임 -->
                     <div class="col-lg-4 col-12 mb-3">
                         <div class="product-thumb">
                             <a href="{{ url_for('product_detail', product_id=2) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/2.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/5.jpg') }}{% endif %}" class="img-fluid product-image" alt="Product 2">
+                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/2.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/5.jpg') }}{% endif %}"
+                                    class="img-fluid product-image" alt="Product 2">
                             </a>
                             <div class="product-top d-flex">
                                 <a href="#" class="bi-heart-fill product-icon"></a>
@@ -143,12 +153,13 @@
                             </div>
                         </div>
                     </div>
-        
+
                     <!-- 세 번째 게임 -->
                     <div class="col-lg-4 col-12 mb-3">
                         <div class="product-thumb">
                             <a href="{{ url_for('product_detail', product_id=3) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/3.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/6.jpg') }}{% endif %}" class="img-fluid product-image" alt="Product 3">
+                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/3.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/6.jpg') }}{% endif %}"
+                                    class="img-fluid product-image" alt="Product 3">
                             </a>
                             <div class="product-top d-flex">
                                 <a href="#" class="bi-heart-fill product-icon"></a>
@@ -163,7 +174,7 @@
                     </div>
                 </div>
             </div>
-        </section>                
+        </section>
     </main>
 
     <footer class="site-footer">
@@ -177,8 +188,10 @@
                 <div class="col-lg-5 col-8">
                     <h5 class="text-white mb-3">Sitemap</h5>
                     <ul class="footer-menu d-flex flex-wrap">
-                        <li class="footer-menu-item"><a href="{{ url_for('company') }}" class="footer-menu-link">Company Info</a></li>
-                        <li class="footer-menu-item"><a href="{{ url_for('contact') }}" class="footer-menu-link">Contact</a></li>
+                        <li class="footer-menu-item"><a href="{{ url_for('company') }}" class="footer-menu-link">Company
+                                Info</a></li>
+                        <li class="footer-menu-item"><a href="{{ url_for('contact') }}"
+                                class="footer-menu-link">Contact</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-4">
@@ -194,4 +207,5 @@
         </div>
     </footer>
 </body>
+
 </html>
