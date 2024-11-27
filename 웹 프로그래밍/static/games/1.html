@@ -98,34 +98,25 @@
         }
 
         function shakeScreen() {
-    const canvas = document.getElementById("canvas");
-    const lyricsDiv = document.getElementById("lyricsDiv");
+            const canvas = document.getElementById("canvas");
 
-    if (!canvas || !lyricsDiv) {
-        console.error("Canvas or lyricsDiv not found.");
-        return;
-    }
+            const intensity = 20; // 흔들림 강도
+            const duration = 300; // 흔들림 지속 시간 (밀리초)
+            let startTime = Date.now();
 
-    const intensity = 20; // 흔들림 강도
-    const duration = 300; // 흔들림 지속 시간 (밀리초)
-    let startTime = Date.now();
+            function shake() {
+                const elapsed = Date.now() - startTime;
+                if (elapsed < duration) {
+                    const offsetX = (Math.random() - 0.5) * intensity;
+                    const offsetY = (Math.random() - 0.5) * intensity;
+                    canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                    canvas.style.transform = `translate(${offsetX * 2}px, ${offsetY * 2}px)`;
+                    requestAnimationFrame(shake);
+                }
+            }
 
-    function shake() {
-        const elapsed = Date.now() - startTime;
-        if (elapsed < duration) {
-            const offsetX = (Math.random() - 0.5) * intensity;
-            const offsetY = (Math.random() - 0.5) * intensity;
-            canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            lyricsDiv.style.transform = `translate(${offsetX * 2}px, ${offsetY * 2}px)`;
-            requestAnimationFrame(shake);
-        } else {
-            canvas.style.transform = ''; // 흔들림 종료 후 원래 위치로 복원
-            lyricsDiv.style.transform = 'translate(-50%, -50%)'; // 가사 위치 복원
+            shake();
         }
-    }
-
-    shake();
-}
 
 
         function breakout() {
