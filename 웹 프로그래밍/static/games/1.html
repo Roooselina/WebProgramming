@@ -100,7 +100,7 @@
         function shakeScreen() {
             const canvas = document.getElementById("canvas");
 
-            const intensity = 20; // 흔들림 강도
+            const intensity = 50; // 흔들림 강도
             const duration = 300; // 흔들림 지속 시간 (밀리초)
             let startTime = Date.now();
 
@@ -110,14 +110,19 @@
                     const offsetX = (Math.random() - 0.5) * intensity;
                     const offsetY = (Math.random() - 0.5) * intensity;
                     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-                    canvas.style.transform = `translate(${offsetX * 2}px, ${offsetY * 2}px)`;
                     requestAnimationFrame(shake);
+                } else {
+                    // 흔들림이 끝난 후 원래 위치로 되돌림
+                    canvas.style.transform = "translate(0, 0)";
                 }
             }
 
             shake();
         }
 
+        const BreakOutAudio = new Audio('../music/BreakOut.mp3');
+        BreakOutAudio.preload = 'auto';
+        BreakOutAudio.playbackRate = 1.0;
 
         function breakout() {
             // Set up the canvas and context
@@ -166,11 +171,11 @@
             document.addEventListener("keyup", breakoutKeyUpHandler, false);
 
             function breakoutKeyDownHandler(e) {
-                if (e.key === "Right" || e.key === "ArrowRight") {
+                if (e.key === "D" || e.key === "d") {
                     rightPressed = true;
-                } else if (e.key === "Left" || e.key === "ArrowLeft") {
+                } else if (e.key === "A" || e.key === "a") {
                     leftPressed = true;
-                } else if (breakoutGameWon && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+                } else if (breakoutGameWon && (e.key === "D" || e.key === "d" || e.key === "A" || e.key === "a")) {
                     confirmSelected = confirmSelected === 0 ? 1 : 0;
                     drawCongratulations();
                 } else if (breakoutGameWon && e.key === " ") {
@@ -186,9 +191,9 @@
             }
 
             function breakoutKeyUpHandler(e) {
-                if (e.key === "Right" || e.key === "ArrowRight") {
+                if (e.key === "d" || e.key === "D") {
                     rightPressed = false;
-                } else if (e.key === "Left" || e.key === "ArrowLeft") {
+                } else if (e.key === "a" || e.key === "A") {
                     leftPressed = false;
                 }
             }
@@ -319,6 +324,7 @@
         function startLevel(levelIndex) {
             if (levelIndex === 0) {
                 startBreakout();
+                BreakOutAudio.play();
             } else if (levelIndex === 1) {
                 startSpaceInvader();
             }
@@ -329,56 +335,65 @@
 
         function drawCongratulations() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "60px Arial, sans-serif";
+            ctx.font = "100px Migae, sans-serif";
             ctx.fillStyle = "#FFF";
             ctx.textAlign = "center";
-            ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 2 - 50);
+            ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 3);
+
+            ctx.font = "50px Migae, sans-serif";
+            ctx.fillText("Go back home?", canvas.width / 2, canvas.height / 2 - 50);
 
             // Draw confirmation options
             confirmOptions.forEach((option, index) => {
-                ctx.font = "40px Arial, sans-serif";
+                ctx.font = "50px Migae, sans-serif";
                 ctx.fillStyle = index === confirmSelected ? "#FFD700" : "#FFF";
                 const optionX = canvas.width / 3 + index * (canvas.width / 3);
-                const optionY = canvas.height / 2 + 50;
+                const optionY = canvas.height / 2 + 150;
                 ctx.fillText(option, optionX, optionY);
             });
         }
 
-        // Key Event Listener
-        document.addEventListener("keydown", (e) => {
-            if (e.key === " " && !gameStarted) {
-                gameStarted = true;
+        const clickAudio = new Audio('../music/Beep.mp3');
+        clickAudio.preload = 'auto';
+        clickAudio.playbackRate = 1.0;
+
+// Key Event Listener
+document.addEventListener("keydown", (e) => {
+    if (e.key === " " && !gameStarted) {
+        gameStarted = true;
+        drawLevelSelection();
+    } else if (gameStarted && !levelSelected) {
+        if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
+            selectedLevel = Math.max(0, selectedLevel - 1);
+            clickAudio.cloneNode(true).play();
+            drawLevelSelection();
+        } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
+            selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
+            clickAudio.cloneNode(true).play();
+            drawLevelSelection();
+        } else if (e.key === " ") {
+            levelSelected = true;
+            startLevel(selectedLevel);
+        }
+    } else if (breakoutGameWon) {
+        if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
+            confirmSelected = Math.max(0, confirmSelected - 1);
+            drawCongratulations();
+        } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
+            confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
+            drawCongratulations();
+        } else if (e.key === " ") {
+            breakoutGameWon = false;
+            levelSelected = false;
+            if (confirmSelected === 0) {
+                gameStarted = false;
+                document.location.reload();
+            } else {
                 drawLevelSelection();
-            } else if (gameStarted && !levelSelected) {
-                if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
-                    selectedLevel = Math.max(0, selectedLevel - 1);
-                    drawLevelSelection();
-                } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
-                    selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
-                    drawLevelSelection();
-                } else if (e.key === " ") {
-                    levelSelected = true;
-                    startLevel(selectedLevel);
-                }
-            } else if (breakoutGameWon) {
-                if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
-                    confirmSelected = Math.max(0, confirmSelected - 1);
-                    drawCongratulations();
-                } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
-                    confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
-                    drawCongratulations();
-                } else if (e.key === " ") {
-                    breakoutGameWon = false;
-                    levelSelected = false;
-                    if (confirmSelected === 0) {
-                        gameStarted = false;
-                        document.location.reload();
-                    } else {
-                        drawLevelSelection();
-                    }
-                }
             }
-        });
+        }
+    }
+});
 
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
