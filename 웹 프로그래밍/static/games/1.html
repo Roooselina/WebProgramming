@@ -34,8 +34,8 @@
         let selectedLevel = 0;
         const levels = ["BREAKOUT", "SPACE INVADER"];
         const levelDescriptions = [
-            "패들을 움직여 블럭을 부숴보세요.",
-            "스페이스바를 눌러서 적들을 물리치세요."
+            "패드를 움직어 블러그을 붞어보세요.",
+            "스페이스바를 눌릴어서 적들을 무리치세요."
         ];
         let breakoutGameWon = false;
         let confirmSelected = 0;
@@ -335,15 +335,232 @@
             breakoutDraw();
         }
 
-        // Start Breakout Game
+        // BreakOut 게임 메서드
         function startBreakout() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             breakout();
         }
 
+        let SpaceInvaderGameWon = false;
 
-        function startSpaceInvader(){
+        // spaceInvader 게임 메서드
+        function spaceInvader() {
+            // Set up the canvas and context
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
+            // Game variables
+            let player = {
+                x: canvas.width / 2 - 25,
+                y: canvas.height - 50,
+                width: 50,
+                height: 20,
+                speed: 5
+            };
+            let bullets = [];
+            let enemies = [];
+            let enemyBullets = [];
+            let isGameOver = false;
+
+            // Controls
+            let rightPressed = false;
+            let leftPressed = false;
+
+            // Key listeners
+            document.addEventListener('keydown', spaceInvaderKeyDownHandler, false);
+            document.addEventListener('keyup', spaceInvaderKeyUpHandler, false);
+
+            function spaceInvaderKeyDownHandler(e) {
+                if (e.key === 'ArrowRight') {
+                    rightPressed = true;
+                } else if (e.key === 'ArrowLeft') {
+                    leftPressed = true;
+                } else if (e.key === ' ' && bullets.length < 5) {
+                    bullets.push({
+                        x: player.x + player.width / 2 - 2.5,
+                        y: player.y,
+                        width: 5,
+                        height: 10,
+                        speed: 7
+                    });
+                }
+            }
+
+            function spaceInvaderKeyUpHandler(e) {
+                if (e.key === 'ArrowRight') {
+                    rightPressed = false;
+                } else if (e.key === 'ArrowLeft') {
+                    leftPressed = false;
+                }
+            }
+
+            // Spawn enemies
+            function spawnEnemies() {
+                for (let row = 0; row < 1; row++) {
+                    for (let col = 0; col < 1; col++) {
+                        enemies.push({
+                            x: col * 120 + 60, // Gap doubled
+                            y: row * 80 + 60, // Gap doubled
+                            width: 80, // Width doubled
+                            height: 50, // Height doubled
+                            direction: 1
+                        });
+                    }
+                }
+            }
+            spawnEnemies();
+
+            // Game update function
+            function update() {
+                // Player movement
+                if (rightPressed && player.x + player.width < canvas.width) {
+                    player.x += player.speed;
+                }
+                if (leftPressed && player.x > 0) {
+                    player.x -= player.speed;
+                }
+
+                // Update bullet positions
+                bullets.forEach((bullet, index) => {
+                    bullet.y -= bullet.speed;
+                    if (bullet.y < 0) {
+                        bullets.splice(index, 1);
+                    }
+                });
+
+                // Update enemy positions
+                for (let i = 0; i < enemies.length; i++) {
+                    const enemy = enemies[i];
+                    enemy.x += enemy.direction * 2;
+
+                    // Change direction and move down if enemy hits wall
+                    if (enemy.x + enemy.width > canvas.width || enemy.x < 0) {
+                        enemy.direction *= -1;
+                        enemy.y += 10;
+                    }
+
+                    // Check if enemy collides with player
+                    if (
+                        enemy.x < player.x + player.width &&
+                        enemy.x + enemy.width > player.x &&
+                        enemy.y < player.y + player.height &&
+                        enemy.y + enemy.height > player.y
+                    ) {
+                        isGameOver = true;
+                        setTimeout(() => {
+                            alert('You Lose!');
+                            document.location.reload();
+                        }, 500);
+                        break; // Immediately exit the loop when game is over
+                    }
+
+                    // Randomly shoot bullets
+                    if (Math.random() < 0.005 && Math.random() < 0.5) {
+                        enemyBullets.push({
+                            x: enemy.x + enemy.width / 2 - 2.5,
+                            y: enemy.y + enemy.height,
+                            width: 5,
+                            height: 10,
+                            speed: 5
+                        });
+                    }
+                }
+
+                // Update enemy bullet positions
+                enemyBullets.forEach((bullet, index) => {
+                    bullet.y += bullet.speed;
+                    if (bullet.y > canvas.height) {
+                        enemyBullets.splice(index, 1);
+                    }
+
+                    // Check if enemy bullet hits player
+                    if (
+                        bullet.x < player.x + player.width &&
+                        bullet.x + bullet.width > player.x &&
+                        bullet.y < player.y + player.height &&
+                        bullet.y + bullet.height > player.y
+                    ) {
+                        isGameOver = true;
+                        setTimeout(() => {
+                            alert('You Lose!');
+                            document.location.reload();
+                        }, 500);
+                    }
+                });
+
+                // Check collisions with enemies
+                bullets.forEach((bullet, bIndex) => {
+                    enemies.forEach((enemy, eIndex) => {
+                        if (
+                            bullet.x < enemy.x + enemy.width &&
+                            bullet.x + bullet.width > enemy.x &&
+                            bullet.y < enemy.y + enemy.height &&
+                            bullet.y + bullet.height > enemy.y
+                        ) {
+                            enemies.splice(eIndex, 1);
+                            bullets.splice(bIndex, 1);
+                        }
+                    });
+                });
+
+                // End game condition
+                if (enemies.length === 0) {
+                    isGameOver = true;
+                    SpaceInvaderGameWon = true;
+                }
+            }
+
+            // Draw everything
+            function draw() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw player
+                ctx.fillStyle = 'green';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+
+                // Draw bullets
+                ctx.fillStyle = 'red';
+                bullets.forEach(bullet => {
+                    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+
+                // Draw enemy bullets
+                ctx.fillStyle = 'orange';
+                enemyBullets.forEach(bullet => {
+                    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+
+                // Draw enemies
+                ctx.fillStyle = 'blue';
+                enemies.forEach(enemy => {
+                    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                });
+            }
+
+            // Game loop
+            function gameLoop() {
+                if (!isGameOver) {
+                    update();
+                    draw();
+                    requestAnimationFrame(gameLoop);
+                } else if (enemies.length === 0) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawCongratulations();
+                }
+            }
+
+            // Start the game loop
+            gameLoop();
+        }
+
+        function startSpaceInvader() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            spaceInvader();
         }
 
         // Start Level Function
@@ -352,6 +569,9 @@
                 startBreakout();
                 BreakOutAudio.play();
             } else if (levelIndex === 1) {
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 startSpaceInvader();
             }
         }
@@ -360,89 +580,91 @@
         drawStartMessage();
 
         function drawCongratulations() {
-    EndGame.currentTime = 1;
-    EndGame.play();
-    fadeOutAudio(BreakOutAudio);
+            EndGame.currentTime = 1;
+            EndGame.play();
+            fadeOutAudio(BreakOutAudio);
 
-    // 별가루 배열 초기화
-    const stars = Array.from({ length: 100 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        opacity: Math.random(),
-        size: Math.random() * 2 + 1,
-        speed: Math.random() * 2 + 0.5,
-    }));
+            // 별가르 배열 초기화
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const stars = Array.from({ length: 100 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                opacity: Math.random(),
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 2 + 0.5,
+            }));
 
-    let fadeOpacity = 1;
-    const fadeOutDuration = 60; // 애니메이션 프레임 지속 시간
-    let fadeCompleted = false;
+            let fadeOpacity = 1;
+            const fadeOutDuration = 60; // 애니메이션 프레임 지원 시간
+            let fadeCompleted = false;
 
-    function animate() {
-        if (!breakoutGameWon) {
-            return; // breakoutGameWon이 false이면 애니메이션 중지
-        }
+            function animate() {
+                if (!breakoutGameWon && !SpaceInvaderGameWon) {
+                    return; // breakoutGameWon이 false이면 애니메이션 중지
+                }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 화면이 하얗게 변함 (한 번만 실행)
-        if (!fadeCompleted) {
-            if (fadeOpacity > 0) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${fadeOpacity})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                fadeOpacity -= 1 / fadeOutDuration;
-            } else {
-                fadeCompleted = true;
+                // 화면이 하와지게 발생 (한 번만 실행)
+                if (!fadeCompleted) {
+                    if (fadeOpacity > 0) {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${fadeOpacity})`;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        fadeOpacity -= 1 / fadeOutDuration;
+                    } else {
+                        fadeCompleted = true;
+                    }
+                }
+
+                // "CONGRATULATIONS!" 텍스트
+                ctx.font = "100px Migae, sans-serif";
+                ctx.fillStyle = "#FFF";
+                ctx.textAlign = "center";
+                ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 3);
+
+                ctx.font = "50px Migae, sans-serif";
+                ctx.fillText("Go back home?", canvas.width / 2, canvas.height / 2 - 50);
+
+                // 확인 옵션
+                confirmOptions.forEach((option, index) => {
+                    ctx.font = "50px Migae, sans-serif";
+                    ctx.fillStyle = index === confirmSelected ? "#FFD700" : "#FFF";
+                    const optionX = canvas.width / 3 + index * (canvas.width / 3);
+                    const optionY = canvas.height / 2 + 150;
+                    ctx.fillText(option, optionX, optionY);
+                });
+
+                // 별가르 효과 (계속 실행)
+                stars.forEach((star) => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.fill();
+
+                    // 별가르 이동
+                    star.y -= star.speed;
+                    if (star.y < 0) {
+                        star.y = canvas.height;
+                        star.x = Math.random() * canvas.width;
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            if ((breakoutGameWon || SpaceInvaderGameWon) && !congratulationDisplayed) {
+                animate();
             }
         }
-
-        // "CONGRATULATIONS!" 텍스트
-        ctx.font = "100px Migae, sans-serif";
-        ctx.fillStyle = "#FFF";
-        ctx.textAlign = "center";
-        ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 3);
-
-        ctx.font = "50px Migae, sans-serif";
-        ctx.fillText("Go back home?", canvas.width / 2, canvas.height / 2 - 50);
-
-        // 확인 옵션
-        confirmOptions.forEach((option, index) => {
-            ctx.font = "50px Migae, sans-serif";
-            ctx.fillStyle = index === confirmSelected ? "#FFD700" : "#FFF";
-            const optionX = canvas.width / 3 + index * (canvas.width / 3);
-            const optionY = canvas.height / 2 + 150;
-            ctx.fillText(option, optionX, optionY);
-        });
-
-        // 별가루 효과 (계속 실행)
-        stars.forEach((star) => {
-            ctx.beginPath();
-            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-            ctx.fill();
-
-            // 별가루 이동
-            star.y -= star.speed;
-            if (star.y < 0) {
-                star.y = canvas.height;
-                star.x = Math.random() * canvas.width;
-            }
-        });
-
-        requestAnimationFrame(animate);
-    }
-
-    if (breakoutGameWon) {
-        animate();
-    }
-}
-
-
 
         const clickAudio = new Audio('../music/Beep.mp3');
         clickAudio.preload = 'auto';
         clickAudio.playbackRate = 1.0;
 
         const MenuAudio = new Audio('../music/GameMenu.mp3');
+        MenuAudio.currentTime = 1;
+        MenuAudio.volume = 0.7;
         MenuAudio.preload = 'auto';
         MenuAudio.playbackRate = 1.0;
 
@@ -450,48 +672,49 @@
         let menuMusicPlay = false; // 음악 한 번만 실행
 
         document.addEventListener("keydown", (e) => {
-    if (e.key === " " && !gameStarted) {
-        gameStarted = true;
-        drawLevelSelection();
-    } else if (gameStarted && !levelSelected) {
-        if (!menuMusicPlay) {
-            MenuAudio.play();  // MenuAudio 오브젝트 재생
-            menuMusicPlay = true;  // 이미 재생 중임을 표시
-        }
-        if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
-            selectedLevel = Math.max(0, selectedLevel - 1);
-            clickAudio.cloneNode(true).play();
-            drawLevelSelection();
-        } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
-            selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
-            clickAudio.cloneNode(true).play();
-            drawLevelSelection();
-        } else if (e.key === " ") {
-            levelSelected = true;
-            startLevel(selectedLevel);
-        }
-    } else if (breakoutGameWon) {
-        if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
-            confirmSelected = Math.max(0, confirmSelected - 1);
-            drawCongratulationsOnce();
-        } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
-            confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
-            drawCongratulationsOnce();
-        } else if (e.key === " ") {
-            breakoutGameWon = false;
-            levelSelected = false;
-            if (confirmSelected === 0) {
-                gameStarted = false;
-                document.location.reload();
-            } else {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                fadeOutAudio(EndGame);
+            if (e.key === " " && !gameStarted) {
+                gameStarted = true;
                 drawLevelSelection();
+            } else if (gameStarted && !levelSelected) {
+                if (!menuMusicPlay) {
+                    MenuAudio.play();  // MenuAudio 오브젝트 재생
+                    menuMusicPlay = true;  // 이미 재생 중임을 표시
+                }
+                if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
+                    selectedLevel = Math.max(0, selectedLevel - 1);
+                    clickAudio.cloneNode(true).play();
+                    drawLevelSelection();
+                } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
+                    selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
+                    clickAudio.cloneNode(true).play();
+                    drawLevelSelection();
+                } else if (e.key === " ") {
+                    levelSelected = true;
+                    startLevel(selectedLevel);
+                    fadeOutAudio(MenuAudio);
+                }
+            } else if ((breakoutGameWon || SpaceInvaderGameWon) && !congratulationDisplayed) {
+                if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
+                    confirmSelected = Math.max(0, confirmSelected - 1);
+                    drawCongratulations();
+                } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
+                    confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
+                    drawCongratulations();
+                } else if (e.key === " ") {
+                    breakoutGameWon = false;
+                    SpaceInvaderGameWon = false;
+                    levelSelected = false;
+                    if (confirmSelected === 0) {
+                        gameStarted = false;
+                        document.location.reload();
+                    } else {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        fadeOutAudio(EndGame);
+                        drawLevelSelection();
+                    }
+                }
             }
-        }
-    }
-});
-
+        });
 
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
