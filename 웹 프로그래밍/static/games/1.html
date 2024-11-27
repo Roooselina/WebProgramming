@@ -144,6 +144,7 @@
         EndGame.volume = 0.5;
         EndGame.preload = 'auto';
         EndGame.playbackRate = 1.0;
+        EndGame.currentTime = 1;
 
         function breakout() {
             // Set up the canvas and context
@@ -580,8 +581,8 @@
         drawStartMessage();
 
         function drawCongratulations() {
-            EndGame.currentTime = 1;
-            EndGame.play();
+
+
             fadeOutAudio(BreakOutAudio);
 
             // 별가르 배열 초기화
@@ -606,7 +607,7 @@
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // 화면이 하와지게 발생 (한 번만 실행)
+                // 화면이 하얘지게 발생 (한 번만 실행)
                 if (!fadeCompleted) {
                     if (fadeOpacity > 0) {
                         ctx.fillStyle = `rgba(255, 255, 255, ${fadeOpacity})`;
@@ -654,6 +655,7 @@
             }
 
             if ((breakoutGameWon || SpaceInvaderGameWon) && !congratulationDisplayed) {
+                congratulationDisplayed = true; // 축하 애니메이션이 한 번만 실행되도록 설정
                 animate();
             }
         }
@@ -670,6 +672,7 @@
 
         let congratulationDisplayed = false; // 축하 이벤트 한 번만 표시하는 변수
         let menuMusicPlay = false; // 음악 한 번만 실행
+        let congratulationMusicPlay = false;
 
         document.addEventListener("keydown", (e) => {
             if (e.key === " " && !gameStarted) {
@@ -693,7 +696,11 @@
                     startLevel(selectedLevel);
                     fadeOutAudio(MenuAudio);
                 }
-            } else if ((breakoutGameWon || SpaceInvaderGameWon) && !congratulationDisplayed) {
+            } else if ((breakoutGameWon || SpaceInvaderGameWon) && congratulationDisplayed) {
+                if (!congratulationMusicPlay) {
+                    EndGame.play();
+                    congratulationMusicPlay = true;  // 이미 재생 중임을 표시
+                }
                 if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
                     confirmSelected = Math.max(0, confirmSelected - 1);
                     drawCongratulations();
@@ -715,6 +722,7 @@
                 }
             }
         });
+
 
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
