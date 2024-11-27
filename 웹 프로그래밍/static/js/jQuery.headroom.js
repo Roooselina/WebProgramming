@@ -4,9 +4,7 @@
     return;
   }
 
-  ////////////
-  // Plugin //
-  ////////////
+  // Plugin
 
   $.fn.headroom = function(option) {
     return this.each(function() {
@@ -31,9 +29,7 @@
     });
   };
 
-  //////////////
   // Data API //
-  //////////////
 
   $('[data-headroom]').each(function() {
     var $this = $(this);
