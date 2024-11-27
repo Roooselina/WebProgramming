@@ -34,8 +34,8 @@
         let selectedLevel = 0;
         const levels = ["BREAKOUT", "SPACE INVADER"];
         const levelDescriptions = [
-            "패드를 움직어 블러그을 붞어보세요.",
-            "스페이스바를 눌릴어서 적들을 무리치세요."
+            "패드를 움직어 블럭을 부숴보세요!",
+            "스페이스바를 눌러서 적들을 물리치세요!"
         ];
         let breakoutGameWon = false;
         let confirmSelected = 0;
@@ -44,7 +44,7 @@
         // Draw Start Message
         function drawStartMessage() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "40px Arial, sans-serif";
+            ctx.font = "40px Migae, sans-serif";
             ctx.fillStyle = "#FFF";
             ctx.textAlign = "center";
             ctx.fillText("PRESS SPACE TO START", canvas.width / 2, canvas.height / 2);
