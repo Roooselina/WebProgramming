@@ -120,9 +120,30 @@
             shake();
         }
 
-        const BreakOutAudio = new Audio('../music/BreakOut.mp3');
+        function fadeOutAudio(audio, duration = 500) {
+            const step = audio.volume / (duration / 10);
+            const fadeOutInterval = setInterval(() => {
+                if (audio.volume > step) {
+                    audio.volume -= step;
+                } else {
+                    audio.volume = 0;
+                    audio.pause();
+                    audio.currentTime = 0;
+                    clearInterval(fadeOutInterval);
+                }
+            }, 10);
+        }
+
+
+        BreakOutAudio = new Audio('../music/BreakOut.mp3');
+        BreakOutAudio.volume = 0.5;
         BreakOutAudio.preload = 'auto';
         BreakOutAudio.playbackRate = 1.0;
+
+        EndGame = new Audio('../music/CardGame.mp3');
+        EndGame.volume = 0.5;
+        EndGame.preload = 'auto';
+        EndGame.playbackRate = 1.0;
 
         function breakout() {
             // Set up the canvas and context
@@ -334,66 +355,119 @@
         drawStartMessage();
 
         function drawCongratulations() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "100px Migae, sans-serif";
-            ctx.fillStyle = "#FFF";
-            ctx.textAlign = "center";
-            ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 3);
+            EndGame.currentTime = 1;
+            EndGame.play();
+            fadeOutAudio(BreakOutAudio);
 
-            ctx.font = "50px Migae, sans-serif";
-            ctx.fillText("Go back home?", canvas.width / 2, canvas.height / 2 - 50);
+            // 별가루 배열 초기화
+            const stars = Array.from({ length: 100 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                opacity: Math.random(),
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 2 + 0.5,
+            }));
 
-            // Draw confirmation options
-            confirmOptions.forEach((option, index) => {
+            let fadeOpacity = 1;
+            const fadeOutDuration = 60; // 애니메이션 프레임 지속 시간
+            let fadeCompleted = false;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 화면이 하얗게 변함 (한 번만 실행)
+                if (!fadeCompleted) {
+                    if (fadeOpacity > 0) {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${fadeOpacity})`;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        fadeOpacity -= 1 / fadeOutDuration;
+                    } else {
+                        fadeCompleted = true;
+                    }
+                }
+
+                // "CONGRATULATIONS!" 텍스트
+                ctx.font = "100px Migae, sans-serif";
+                ctx.fillStyle = "#FFF";
+                ctx.textAlign = "center";
+                ctx.fillText("CONGRATULATIONS!", canvas.width / 2, canvas.height / 3);
+
                 ctx.font = "50px Migae, sans-serif";
-                ctx.fillStyle = index === confirmSelected ? "#FFD700" : "#FFF";
-                const optionX = canvas.width / 3 + index * (canvas.width / 3);
-                const optionY = canvas.height / 2 + 150;
-                ctx.fillText(option, optionX, optionY);
-            });
+                ctx.fillText("Go back home?", canvas.width / 2, canvas.height / 2 - 50);
+
+                // 확인 옵션
+                confirmOptions.forEach((option, index) => {
+                    ctx.font = "50px Migae, sans-serif";
+                    ctx.fillStyle = index === confirmSelected ? "#FFD700" : "#FFF";
+                    const optionX = canvas.width / 3 + index * (canvas.width / 3);
+                    const optionY = canvas.height / 2 + 150;
+                    ctx.fillText(option, optionX, optionY);
+                });
+
+                // 별가루 효과 (계속 실행)
+                stars.forEach((star) => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.fill();
+
+                    // 별가루 이동
+                    star.y -= star.speed;
+                    if (star.y < 0) {
+                        star.y = canvas.height;
+                        star.x = Math.random() * canvas.width;
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
         }
+
 
         const clickAudio = new Audio('../music/Beep.mp3');
         clickAudio.preload = 'auto';
         clickAudio.playbackRate = 1.0;
 
-// Key Event Listener
-document.addEventListener("keydown", (e) => {
-    if (e.key === " " && !gameStarted) {
-        gameStarted = true;
-        drawLevelSelection();
-    } else if (gameStarted && !levelSelected) {
-        if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
-            selectedLevel = Math.max(0, selectedLevel - 1);
-            clickAudio.cloneNode(true).play();
-            drawLevelSelection();
-        } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
-            selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
-            clickAudio.cloneNode(true).play();
-            drawLevelSelection();
-        } else if (e.key === " ") {
-            levelSelected = true;
-            startLevel(selectedLevel);
-        }
-    } else if (breakoutGameWon) {
-        if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
-            confirmSelected = Math.max(0, confirmSelected - 1);
-            drawCongratulations();
-        } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
-            confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
-            drawCongratulations();
-        } else if (e.key === " ") {
-            breakoutGameWon = false;
-            levelSelected = false;
-            if (confirmSelected === 0) {
-                gameStarted = false;
-                document.location.reload();
-            } else {
+        let congratulationDisplayed = false; // 축하 화면이 처음 한 번만 표시되도록 추적
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === " " && !gameStarted) {
+                gameStarted = true;
                 drawLevelSelection();
+            } else if (gameStarted && !levelSelected) {
+                if (e.key === "ArrowUp" || e.key === "w" || e.key === "A" || e.key === "a") {
+                    selectedLevel = Math.max(0, selectedLevel - 1);
+                    clickAudio.cloneNode(true).play();
+                    drawLevelSelection();
+                } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "D" || e.key === "d") {
+                    selectedLevel = Math.min(levels.length - 1, selectedLevel + 1);
+                    clickAudio.cloneNode(true).play();
+                    drawLevelSelection();
+                } else if (e.key === " ") {
+                    levelSelected = true;
+                    startLevel(selectedLevel);
+                }
+            } else if (breakoutGameWon) {
+                if (e.key === "ArrowLeft" || e.key === "A" || e.key === "a") {
+                    confirmSelected = Math.max(0, confirmSelected - 1);
+                    drawCongratulationsOnce();
+                } else if (e.key === "ArrowRight" || e.key === "D" || e.key === "d") {
+                    confirmSelected = Math.min(confirmOptions.length - 1, confirmSelected + 1);
+                    drawCongratulationsOnce();
+                } else if (e.key === " ") {
+                    breakoutGameWon = false;
+                    levelSelected = false;
+                    if (confirmSelected === 0) {
+                        gameStarted = false;
+                        document.location.reload();
+                    } else {
+                        drawLevelSelection();
+                    }
+                }
             }
-        }
-    }
-});
+        });
 
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
