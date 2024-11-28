@@ -39,6 +39,18 @@
                 }
             });
         });
+
+        document.addEventListener("keydown", function(event) {
+    const iframe = document.getElementById("gameIframe");
+    if (event.key === "Tab") {
+        event.preventDefault(); // 기본 동작 방지
+        if (!document.fullscreenElement) {
+            iframe.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+});
     </script>
     
     
@@ -141,73 +153,35 @@
                 </div>
             </div>
         </section>
-
+        
         <section class="related-product section-padding border-top">
             <div class="container">
                 <div class="row">
                     <div class="col-12">
                         <h3 class="mb-5">You might also like</h3>
                     </div>
-
-                    <!-- 첫 번째 게임 -->
-                    <div class="col-lg-4 col-12 mb-3">
-                        <div class="product-thumb">
-                            <a href="{{ url_for('product_detail', product_id=1) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/1.png') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/4.jpg') }}{% endif %}"
-                                    class="img-fluid product-image" alt="Product 1">
-                            </a>
-                            <div class="product-top d-flex">
-                                <a href="#" class="bi-heart-fill product-icon"></a>
-                            </div>
-                            <div class="product-info d-flex">
-                                <div>
-                                    <h5 class="product-title mb-0">Game_6_NAME</h5>
-                                    <p class="product-p">Description of Game 6</p>
+                    {% for related_id, related_product in products.items() %}
+                        <div class="col-lg-4 col-12 mb-3">
+                            <div class="product-thumb">
+                                <a href="{{ url_for('product_detail', product_id=related_id) }}">
+                                    <img src="{{ url_for('static', filename='images/game/' ~ related_id ~ '.png') }}" class="img-fluid product-image" alt="{{ related_product.name }}">
+                                </a>
+                                <div class="product-top d-flex">
+                                    <a href="#" class="bi-heart-fill product-icon"></a>
+                                </div>
+                                <div class="product-info d-flex">
+                                    <div>
+                                        <h5 class="product-title mb-0">{{ related_product.name }}</h5>
+                                        <p class="product-p">{{ related_product.description }}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 두 번째 게임 -->
-                    <div class="col-lg-4 col-12 mb-3">
-                        <div class="product-thumb">
-                            <a href="{{ url_for('product_detail', product_id=2) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/2.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/5.jpg') }}{% endif %}"
-                                    class="img-fluid product-image" alt="Product 2">
-                            </a>
-                            <div class="product-top d-flex">
-                                <a href="#" class="bi-heart-fill product-icon"></a>
-                            </div>
-                            <div class="product-info d-flex">
-                                <div>
-                                    <h5 class="product-title mb-0">Game_6_NAME</h5>
-                                    <p class="product-p">Description of Game 6</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 세 번째 게임 -->
-                    <div class="col-lg-4 col-12 mb-3">
-                        <div class="product-thumb">
-                            <a href="{{ url_for('product_detail', product_id=3) }}">
-                                <img src="{% if product_id in [1, 2, 3] %}{{ url_for('static', filename='images/game/3.jpg') }}{% elif product_id in [4, 5, 6] %}{{ url_for('static', filename='images/game/6.jpg') }}{% endif %}"
-                                    class="img-fluid product-image" alt="Product 3">
-                            </a>
-                            <div class="product-top d-flex">
-                                <a href="#" class="bi-heart-fill product-icon"></a>
-                            </div>
-                            <div class="product-info d-flex">
-                                <div>
-                                    <h5 class="product-title mb-0">Game_6_NAME</h5>
-                                    <p class="product-p">Description of Game 6</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </section>
+        
     </main>
 
     <footer class="site-footer">

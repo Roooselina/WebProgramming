@@ -20,6 +20,19 @@
             height: 99vh;
         }
     </style>
+    <script>
+        document.addEventListener("keydown", function(event) {
+            const iframe = document.getElementById("gameIframe");
+            if (event.key === "Tab") {
+                event.preventDefault(); // 기본 동작 방지
+                if (!document.fullscreenElement) {
+                    iframe.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+        </script>
 </head>
 
 <body>
