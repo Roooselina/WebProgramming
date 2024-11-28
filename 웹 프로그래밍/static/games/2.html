@@ -82,7 +82,7 @@
             ctx.fillText("PRESS SPACE TO START", canvas.width / 2, canvas.height / 2);
         }
 
-        
+
         function startGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -416,11 +416,19 @@
                 } else {
                     ctx.fillText("It's a Tie!", canvas.width / 2, canvas.height / 2);
                 }
+
+                // Enter 키를 누르면 페이지 새로 고침
+                document.addEventListener('keydown', function (event) {
+                    if (event.code === 'Enter') {
+                        document.location.reload();
+                    }
+                });
             } else if (currentPlayer === "robot") {
                 // 로봇 턴 교환
                 setTimeout(robotTurn, 1000);
             }
         }
+
 
         function robotTurn() {
             // 매칭되지 않은 카드 중 랜덤으로 선택
@@ -432,7 +440,7 @@
             const firstCardChoice = availableCards[firstIndex];
             firstCardChoice.isFlipped = true;
             firstCard = firstCardChoice;
-            setTimeout(() => {}, 10);
+            setTimeout(() => { }, 10);
             drawCards();
 
             // 두 번째 카드 선택
@@ -441,7 +449,7 @@
             const secondCardChoice = availableCards[secondIndex];
             secondCardChoice.isFlipped = true;
             secondCard = secondCardChoice;
-            setTimeout(() => {}, 10);
+            setTimeout(() => { }, 10);
             drawCards();
 
             isProcessing = true;
