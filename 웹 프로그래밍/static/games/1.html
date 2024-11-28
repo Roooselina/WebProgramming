@@ -57,50 +57,51 @@
 
         // Draw Level Selection
         function drawLevelSelection() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "80px Migae, sans-serif";
-            ctx.fillStyle = "#FFF";
-            ctx.textAlign = "center";
-            ctx.fillText("Choose Your Game", canvas.width / 2, canvas.height / 3 + 50);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = (canvas.width / 18) + "px Migae, sans-serif";
+    ctx.fillStyle = "#FFF";
+    ctx.textAlign = "center";
+    ctx.fillText("Choose Your Game", canvas.width / 2, canvas.height / 3 + 50);
 
-            // 설명 텍스트
-            ctx.font = "30px Arial, sans-serif";
-            ctx.fillText(levelDescriptions[selectedLevel], canvas.width / 2, canvas.height / 3 + 150);
+    // 설명 텍스트
+    ctx.font = "30px Arial, sans-serif";
+    ctx.fillText(levelDescriptions[selectedLevel], canvas.width / 2, 2 * (canvas.height / 4));
 
-            // 설명 위 선
-            const lineXStart = canvas.width / 4;
-            const lineXEnd = (canvas.width / 4) * 3;
-            ctx.beginPath();
-            ctx.moveTo(lineXStart, 600);
-            ctx.lineTo(lineXEnd, 600);
-            ctx.strokeStyle = "#FFF";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+    // 설명 위 선
+    const lineXStart = canvas.width / 4;
+    const lineXEnd = (canvas.width / 4) * 3;
+    ctx.beginPath();
+    ctx.moveTo(lineXStart, canvas.height / 7*3);
+    ctx.lineTo(lineXEnd, canvas.height / 7*3);
+    ctx.strokeStyle = "#FFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-            // 설명 아래 선
-            ctx.beginPath();
-            ctx.moveTo(lineXStart, 400);
-            ctx.lineTo(lineXEnd, 400);
-            ctx.stroke();
+    // 설명 아래 선
+    ctx.beginPath();
+    ctx.moveTo(lineXStart, (canvas.height / 5)*3);
+    ctx.lineTo(lineXEnd, (canvas.height / 5)*3);
+    ctx.stroke();
 
-            // 게임 레벨 선택 텍스트 가로로 배치 (간격 좁힘)
-            levels.forEach((level, index) => {
-                ctx.font = "50px Migae, sans-serif";
-                ctx.fillStyle = index === selectedLevel ? "#FFD700" : "#FFF";
+    // 게임 레벨 선택 텍스트 가로로 배치 (간격 좁힘)
+    levels.forEach((level, index) => {
+        ctx.font = (canvas.width / 38) + "px Migae, sans-serif"
+        ctx.fillStyle = index === selectedLevel ? "#FFD700" : "#FFF";
 
-                // 간격을 좁히기 위해 더 작은 값을 사용하여 x 좌표 계산
-                const levelSpacing = canvas.width / (levels.length + 2); // 기존보다 조금 더 가까이
-                const levelX = levelSpacing * (index + 1.5); // 시작 위치를 약간 가운데로
+        // 간격을 좁히기 위해 더 작은 값을 사용하여 x 좌표 계산
+        const levelSpacing = canvas.width / (levels.length + 2); // 기존보다 조금 더 가까이
+        const levelX = levelSpacing * (index + 1.5); // 시작 위치를 약간 가운데로
 
-                const levelY = 3 * (canvas.height / 4);
+        const levelY = 3 * (canvas.height / 4);
 
-                ctx.fillText(
-                    (index === selectedLevel ? "> " : "") + level,
-                    levelX,
-                    levelY
-                );
-            });
-        }
+        ctx.fillText(
+            (index === selectedLevel ? "> " : "") + level,
+            levelX,
+            levelY
+        );
+    });
+}
+
 
         function shakeScreen() {
             const canvas = document.getElementById("canvas");
@@ -589,6 +590,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 startSpaceInvader();
+                SpaceInvaderAudio.volume=0.1;
                 SpaceInvaderAudio.play();
 
             }
@@ -659,7 +661,7 @@
                     ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
                     ctx.fill();
 
-                    // 별가르 이동
+                    // 별가루 이동
                     star.y -= star.speed;
                     if (star.y < 0) {
                         star.y = canvas.height;
@@ -727,11 +729,14 @@
                     breakoutGameWon = false;
                     SpaceInvaderGameWon = false;
                     levelSelected = false;
+                    congratulationDisplayed = false;
+                    congratulationMusicPlay = false;
                     if (confirmSelected === 0) {
                         gameStarted = false;
                         document.location.reload();
                     } else {
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        congratulationMusicPlay = false;
                         fadeOutAudio(EndGame);
                         drawLevelSelection();
                     }
@@ -747,8 +752,6 @@
             if (!gameStarted) {
                 drawStartMessage();
             } else if (gameStarted && !levelSelected) {
-
-                
                 drawLevelSelection();
             } else if (breakoutGameWon) {
                 drawCongratulations();

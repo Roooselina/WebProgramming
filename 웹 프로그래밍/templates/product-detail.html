@@ -13,39 +13,34 @@
     <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/mainTemplateCss.css') }}" rel="stylesheet">
     <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            const iframe = document.getElementById('gameIframe');
+        document.addEventListener("DOMContentLoaded", function () {
+            const iframe = document.getElementById("gameIframe");
     
-            const adjustIframeSize = () => {
+            iframe.addEventListener("load", function () {
                 try {
+                    // iframe 내부 document 접근
                     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                    const canvas = iframeDocument.querySelector('canvas');
+    
+                    // canvas 요소 가져오기
+                    const canvas = iframeDocument.querySelector("canvas");
     
                     if (canvas) {
-                        // Adjust iframe size to match the canvas size
-                        iframe.style.width = canvas.offsetWidth + 'px';
-                        iframe.style.height = canvas.offsetHeight + 'px';
+                        // iframe 크기 조정
+                        iframe.style.width = `${canvas.offsetWidth}px`;
+                        iframe.style.height = `${canvas.offsetHeight}px`;
+    
+                        // canvas만 보이도록 iframe의 스크롤 숨기기
+                        iframe.style.overflow = "hidden";
+                    } else {
+                        console.error("Canvas not found inside the iframe.");
                     }
                 } catch (error) {
-                    console.error('Error adjusting iframe size:', error);
-                }
-            };
-    
-            iframe.addEventListener('load', function () {
-                adjustIframeSize();
-    
-                // Add resize observer to dynamically adjust the iframe size
-                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                const canvas = iframeDocument.querySelector('canvas');
-                if (canvas) {
-                    const resizeObserver = new ResizeObserver(() => {
-                        adjustIframeSize();
-                    });
-                    resizeObserver.observe(canvas);
+                    console.error("Error adjusting iframe size:", error);
                 }
             });
         });
     </script>
+    
     
 
 </head>
