@@ -488,136 +488,147 @@
             return true;
         }
 
-
         let playerWon = false; // Flag to track if the player has won
 
-        function drawScene() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawScene() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update offset to keep player centered
-            offsetX = player.x - canvas.width / 2;
-            offsetY = player.y - canvas.height / 2;
+    // Update offset to keep player centered
+    offsetX = player.x - canvas.width / 2;
+    offsetY = player.y - canvas.height / 2;
 
-            // Draw goal at its random position
-            ctx.fillStyle = 'gold';
-            ctx.beginPath();
-            ctx.arc(goal.x - offsetX, goal.y - offsetY, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.font = '24px Arial';
-            ctx.fillText('GOAL', goal.x - offsetX - 20, goal.y - offsetY - 15);
+    // Draw goal at its random position
+    ctx.fillStyle = 'gold';
+    ctx.beginPath();
+    ctx.arc(goal.x - offsetX, goal.y - offsetY, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = '24px Arial';
+    ctx.fillText('GOAL', goal.x - offsetX - 20, goal.y - offsetY - 15);
 
-            // Check if player reaches the goal
-            if (
-                Math.abs(player.x - goal.x) < 20 &&
-                Math.abs(player.y - goal.y) < 20
-            ) {
-                score++;
-                if (score >= 3) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = 'white';
-                    ctx.font = '48px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2);
-                    playerWon = true; // Set the flag to true
-                    return;
-                }
-                resetGame();
-            }
-
-            // Draw player
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(canvas.width / 2 - player.width / 2, canvas.height / 2 - player.height / 2, player.width, player.height);
-
-            // Draw monster
-            ctx.fillStyle = 'red';
-            ctx.fillRect(monster.x - offsetX, monster.y - offsetY, monster.width, monster.height);
-
-            // Play footstep audio based on monster position relative to player
-            let footstepAudio = new Audio('../music/MonsterFootStep.mp3');
-            footstepAudio.volume = 0.4;
-            footstepAudio.preload = 'auto';
-            footstepAudio.playbackRate = 1.0;
-
-            let distanceX = monster.x - player.x;
-            let distanceY = monster.y - player.y;
-            let distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-
-            // Adjust volume and panning based on distance and position
-            if ('pan' in footstepAudio) { // Check if the AudioContext API is available
-                let panNode = new StereoPannerNode(audioContext, { pan: distanceX < 0 ? -1 : 1 });
-                footstepAudio.connect(panNode).connect(audioContext.destination);
-            }
-
-            footstepAudio.volume = Math.max(0, Math.min(1, 1 - (distance / 500))); // Volume decreases with distance
-            footstepAudio.play();
-
-            // Draw walls
+    // Check if player reaches the goal
+    if (
+        Math.abs(player.x - goal.x) < 20 &&
+        Math.abs(player.y - goal.y) < 20
+    ) {
+        score++;
+        updateParentScore(score); // Update the score in the parent document
+        if (score >= 3) {
             ctx.fillStyle = 'black';
-            walls.forEach(wall => {
-                ctx.fillRect(wall.x - offsetX, wall.y - offsetY, wall.width, wall.height);
-            });
-
-            // Add vignette effect (black gradient around the edges)
-            let gradient = ctx.createRadialGradient(
-                canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 10,
-                canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 4
-            );
-            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
-
-            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2);
+            playerWon = true; // Set the flag to true
+            return;
+        }
+        resetGame();
+    }
 
-            // Add stronger TV static effect similar to an old TV screen
-            if (Math.random() < 0.3) { // 30% chance to apply static effect
-                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    let randomNoise = Math.random() < 0.1 ? Math.random() * 400 - 200 : Math.random() * 200 - 100;
-                    data[i] = Math.min(255, Math.max(0, data[i] + randomNoise));     // Red
-                    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + randomNoise)); // Green
-                    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + randomNoise)); // Blue
+    // Draw player
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(canvas.width / 2 - player.width / 2, canvas.height / 2 - player.height / 2, player.width, player.height);
+
+    // Draw monster
+    ctx.fillStyle = 'red';
+    ctx.fillRect(monster.x - offsetX, monster.y - offsetY, monster.width, monster.height);
+
+    // Play footstep audio based on monster position relative to player
+    let footstepAudio = new Audio('../music/MonsterFootStep.mp3');
+    footstepAudio.volume = 0.4;
+    footstepAudio.preload = 'auto';
+    footstepAudio.playbackRate = 1.0;
+
+    let distanceX = monster.x - player.x;
+    let distanceY = monster.y - player.y;
+    let distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+    // Adjust volume and panning based on distance and position
+    if ('pan' in footstepAudio) { // Check if the AudioContext API is available
+        let panNode = new StereoPannerNode(audioContext, { pan: distanceX < 0 ? -1 : 1 });
+        footstepAudio.connect(panNode).connect(audioContext.destination);
+    }
+
+    footstepAudio.volume = Math.max(0, Math.min(1, 1 - (distance / 500))); // Volume decreases with distance
+    footstepAudio.play();
+
+    // Draw walls
+    ctx.fillStyle = 'black';
+    walls.forEach(wall => {
+        ctx.fillRect(wall.x - offsetX, wall.y - offsetY, wall.width, wall.height);
+    });
+
+    // Add vignette effect (black gradient around the edges)
+    let gradient = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 10,
+        canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 4
+    );
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add stronger TV static effect similar to an old TV screen
+    if (Math.random() < 0.3) { // 30% chance to apply static effect
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            let randomNoise = Math.random() < 0.1 ? Math.random() * 400 - 200 : Math.random() * 200 - 100;
+            data[i] = Math.min(255, Math.max(0, data[i] + randomNoise));     // Red
+            data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + randomNoise)); // Green
+            data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + randomNoise)); // Blue
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        // Add horizontal glitch lines
+        for (let j = 0; j < 10; j++) {
+            let y = Math.random() * canvas.height;
+            let height = Math.random() * 5 + 1;
+            ctx.fillStyle = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, ${Math.random()})`;
+            ctx.fillRect(0, y, canvas.width, height);
+        }
+    }
+
+    // Add screen distortion effect with 5% chance
+    if (Math.random() < 0.05) {
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let data = imageData.data;
+        let offset = Math.floor(Math.random() * 20) - 10; // Random horizontal offset between -10 and 10
+
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                let srcIndex = ((y * canvas.width) + x) * 4;
+                let destX = x + offset;
+
+                if (destX >= 0 && destX < canvas.width) {
+                    let destIndex = ((y * canvas.width) + destX) * 4;
+                    data[destIndex] = data[srcIndex];         // Red
+                    data[destIndex + 1] = data[srcIndex + 1]; // Green
+                    data[destIndex + 2] = data[srcIndex + 2]; // Blue
+                    data[destIndex + 3] = data[srcIndex + 3]; // Alpha
                 }
-                ctx.putImageData(imageData, 0, 0);
-
-                // Add horizontal glitch lines
-                for (let j = 0; j < 10; j++) {
-                    let y = Math.random() * canvas.height;
-                    let height = Math.random() * 5 + 1;
-                    ctx.fillStyle = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, ${Math.random()})`;
-                    ctx.fillRect(0, y, canvas.width, height);
-                }
-            }
-
-            // Add screen distortion effect with 5% chance
-            if (Math.random() < 0.05) {
-                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let data = imageData.data;
-                let offset = Math.floor(Math.random() * 20) - 10; // Random horizontal offset between -10 and 10
-
-                for (let y = 0; y < canvas.height; y++) {
-                    for (let x = 0; x < canvas.width; x++) {
-                        let srcIndex = ((y * canvas.width) + x) * 4;
-                        let destX = x + offset;
-
-                        if (destX >= 0 && destX < canvas.width) {
-                            let destIndex = ((y * canvas.width) + destX) * 4;
-                            data[destIndex] = data[srcIndex];         // Red
-                            data[destIndex + 1] = data[srcIndex + 1]; // Green
-                            data[destIndex + 2] = data[srcIndex + 2]; // Blue
-                            data[destIndex + 3] = data[srcIndex + 3]; // Alpha
-                        }
-                    }
-                }
-                ctx.putImageData(imageData, 0, 0);
-
-                // Draw score at a fixed position on the canvas
-                ctx.fillStyle = "#fff";
-                ctx.font = '24px Arial';
-                ctx.fillText('Score: ' + score, 80, 50);
             }
         }
+        ctx.putImageData(imageData, 0, 0);
+
+        // Draw score at a fixed position on the canvas
+        ctx.fillStyle = "#fff";
+        ctx.font = '24px Arial';
+        ctx.fillText('Score: ' + score, 80, 50);
+    }
+}
+
+// Function to update the score in the parent document
+function updateParentScore(score) {
+    if (window.parent && window.parent.document) {
+        const scoreElement = window.parent.document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = score;
+        }
+    }
+}
+
 
         // Add event listener for spacebar to reload page after winning
         document.addEventListener('keydown', (event) => {
@@ -699,6 +710,7 @@
                 // Add event listener for spacebar to reload
                 document.addEventListener('keydown', function (event) {
                     if (event.code === 'Space') {
+                        updateParentScore();
                         document.location.reload();
                     }
                 });

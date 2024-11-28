@@ -409,6 +409,7 @@
                 ctx.font = "60px Migae, Arial, sans-serif";
                 ctx.fillStyle = "#FFF";
                 ctx.textAlign = "center";
+
                 if (scores.human > scores.robot) {
                     ctx.fillText("Human Wins!", canvas.width / 2, canvas.height / 2);
                 } else if (scores.robot > scores.human) {
@@ -416,6 +417,9 @@
                 } else {
                     ctx.fillText("It's a Tie!", canvas.width / 2, canvas.height / 2);
                 }
+
+                // Update the human score in the parent document
+                updateParentScore(scores.human);
 
                 // Enter 키를 누르면 페이지 새로 고침
                 document.addEventListener('keydown', function (event) {
@@ -428,6 +432,17 @@
                 setTimeout(robotTurn, 1000);
             }
         }
+
+        // Function to update the score in the parent document
+        function updateParentScore(score) {
+            if (window.parent && window.parent.document) {
+                const scoreElement = window.parent.document.getElementById('score');
+                if (scoreElement) {
+                    scoreElement.textContent = score;
+                }
+            }
+        }
+
 
 
         function robotTurn() {

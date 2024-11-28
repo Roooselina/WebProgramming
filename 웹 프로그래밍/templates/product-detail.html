@@ -12,6 +12,25 @@
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/mainTemplateCss.css') }}" rel="stylesheet">
+    <script>
+        const iframe = document.getElementById('gameIframe');
+    
+        iframe.addEventListener('load', function() {
+            try {
+                // Get the iframe's document and the canvas element
+                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                const canvas = iframeDocument.querySelector('canvas');
+    
+                if (canvas) {
+                    // Adjust iframe size to match the canvas size
+                    iframe.style.width = canvas.offsetWidth + 'px';
+                    iframe.style.height = canvas.offsetHeight + 'px';
+                }
+            } catch (error) {
+                console.error('Error adjusting iframe size:', error);
+            }
+        });
+    </script>
 
 </head>
 
@@ -74,9 +93,12 @@
                     </div>
                     <div class="team-thumb d-flex align-items-center">
                         <!-- 게임 실행 iframe -->
-                        <iframe src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}" width="100%"
-                            height="600px" style="border: 5px solid black;"></iframe>
+                        <iframe id="gameIframe" 
+                            src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}" 
+                            style="border: 5px solid black; display: block; margin: 0 auto; width: 100%; height: 800px;">
+                        </iframe>
                     </div>
+                    
                     <div class="col-lg-6 col-12">
                         <!-- 설명 컨테이너 -->
                         <div class="d-flex justify-content-between align-items-center mt-4">

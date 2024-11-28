@@ -272,13 +272,27 @@
                 }
             }
 
-            // Reset the game
-            function resetGame() {
-                gameBoard = createBoard(ROWS, COLS);
-                currentPiece = createPiece();
-                gameStarted = false;
-                score = 0;
-            }
+// Reset the game
+function resetGame() {
+    gameBoard = createBoard(ROWS, COLS);
+    currentPiece = createPiece();
+    gameStarted = false;
+    score = 0;
+
+    // Update the score in the parent document
+    updateParentScore(score);
+}
+
+// Function to update the score in the parent document
+function updateParentScore(score) {
+    if (window.parent && window.parent.document) {
+        const scoreElement = window.parent.document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = score;
+        }
+    }
+}
+
 
             // Main game loop
             function gameLoop() {
