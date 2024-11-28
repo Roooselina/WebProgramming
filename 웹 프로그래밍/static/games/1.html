@@ -50,6 +50,11 @@
             ctx.fillText("PRESS SPACE TO START", canvas.width / 2, canvas.height / 2);
         }
 
+        let BreakAudio = new Audio('../music/Beep.mp3');
+        BreakAudio.volume = 0.5;
+        BreakAudio.preload = 'auto';
+        BreakAudio.playbackRate = 1.0;
+
         // Draw Level Selection
         function drawLevelSelection() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -139,6 +144,12 @@
         BreakOutAudio.volume = 0.5;
         BreakOutAudio.preload = 'auto';
         BreakOutAudio.playbackRate = 1.0;
+
+        SpaceInvaderAudio = new Audio('../music/SpaceInvader.mp3');
+        SpaceInvaderAudio.volume = 0.5;
+        SpaceInvaderAudio.preload = 'auto';
+        SpaceInvaderAudio.playbackRate = 1.0;
+
 
         EndGame = new Audio('../music/CardGame.mp3');
         EndGame.volume = 0.5;
@@ -283,6 +294,7 @@
                                 ballDY = -ballDY;
                                 b.status = 0;
                                 shakeScreen();
+                                BreakAudio.play();
                             }
                         }
                     }
@@ -374,9 +386,9 @@
             document.addEventListener('keyup', spaceInvaderKeyUpHandler, false);
 
             function spaceInvaderKeyDownHandler(e) {
-                if (e.key === 'ArrowRight') {
+                if (e.key === 'd' || e.key === 'D') {
                     rightPressed = true;
-                } else if (e.key === 'ArrowLeft') {
+                } else if (e.key === 'a' || e.key === 'A') {
                     leftPressed = true;
                 } else if (e.key === ' ' && bullets.length < 5) {
                     bullets.push({
@@ -390,12 +402,13 @@
             }
 
             function spaceInvaderKeyUpHandler(e) {
-                if (e.key === 'ArrowRight') {
+                if (e.key === 'd' || e.key === 'D') {
                     rightPressed = false;
-                } else if (e.key === 'ArrowLeft') {
+                } else if (e.key === 'a' || e.key === 'A') {
                     leftPressed = false;
                 }
             }
+
 
             // Spawn enemies
             function spawnEnemies() {
@@ -503,6 +516,7 @@
                             enemies.splice(eIndex, 1);
                             bullets.splice(bIndex, 1);
                             shakeScreen();
+                            BreakAudio.play();
                         }
                     });
                 });
@@ -575,6 +589,8 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 startSpaceInvader();
+                SpaceInvaderAudio.play();
+
             }
         }
 
@@ -582,9 +598,8 @@
         drawStartMessage();
 
         function drawCongratulations() {
-
-
             fadeOutAudio(BreakOutAudio);
+            fadeOutAudio(SpaceInvaderAudio);
 
             // 별가르 배열 초기화
             const canvas = document.getElementById('canvas');
