@@ -310,7 +310,7 @@ function updateParentScore(score) {
 
             // Event listeners for key presses
             document.addEventListener('keydown', (e) => {
-                if (!gameStarted && e.key === 'Enter') {
+                if (!gameStarted && e.key === ' ') {
                     gameStarted = true;
                     currentPiece = createPiece();
 

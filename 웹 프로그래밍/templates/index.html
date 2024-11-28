@@ -10,6 +10,35 @@
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
     <link href="../static/css/bootstrap-icons.css" rel="stylesheet">
     <link href="../static/css/mainTemplateCss.css" rel="stylesheet">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+                const section = document.querySelector('.slick-slideshow');
+                const imageElement = section.querySelector('img');
+                const images = [
+                    '../static/images/header/LogInBackgroundImg1.jpg',
+                    '../static/images/header/LogInBackgroundImg2.jpg',
+                    '../static/images/header/LogInBackgroundImg3.jpg'
+                ];
+                let currentImageIndex = 0;
+
+                function changeImage() {
+                    imageElement.style.transition = 'filter 1s ease';
+                    imageElement.style.filter = 'brightness(0)';
+
+                    setTimeout(() => {
+                        // Change to the next image
+                        currentImageIndex = (currentImageIndex + 1) % images.length;
+                        imageElement.src = images[currentImageIndex];
+
+                        // Fade in with brightness
+                        imageElement.style.filter = 'brightness(1)';
+                    }, 1000);
+                }
+
+                setInterval(changeImage, 4000);
+            });
+    </script>
 </head>
 
 <body>
