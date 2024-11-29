@@ -15,20 +15,20 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const iframe = document.getElementById("gameIframe");
-    
+
             iframe.addEventListener("load", function () {
                 try {
                     // iframe 내부 document 접근
                     const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    
+
                     // canvas 요소 가져오기
                     const canvas = iframeDocument.querySelector("canvas");
-    
+
                     if (canvas) {
                         // iframe 크기 조정
                         iframe.style.width = `${canvas.offsetWidth}px`;
                         iframe.style.height = `${canvas.offsetHeight}px`;
-    
+
                         // canvas만 보이도록 iframe의 스크롤 숨기기
                         iframe.style.overflow = "hidden";
                     } else {
@@ -40,20 +40,34 @@
             });
         });
 
-        document.addEventListener("keydown", function(event) {
-    const iframe = document.getElementById("gameIframe");
-    if (event.key === "Tab") {
-        event.preventDefault(); // 기본 동작 방지
-        if (!document.fullscreenElement) {
-            iframe.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
-    }
-});
+        document.addEventListener("keydown", function (event) {
+            const iframe = document.getElementById("gameIframe");
+            if (event.key === "Tab") {
+                event.preventDefault(); // 기본 동작 방지
+                if (!document.fullscreenElement) {
+                    iframe.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+         // iframe 메시지 수신
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "updateParentScore") {
+            const score = event.data.score;
+            const currentDate = new Date().toLocaleString();
+            const productName = "{{product_name}}";
+
+            // 로그 데이터를 localStorage에 저장
+            const logs = JSON.parse(localStorage.getItem("gameLogs")) || [];
+            logs.push({ date: currentDate, product_name: productName, score: score });
+            localStorage.setItem("gameLogs", JSON.stringify(logs));
+            }
+        });
     </script>
-    
-    
+
+
 
 </head>
 
@@ -116,12 +130,11 @@
                     </div>
                     <div class="team-thumb d-flex align-items-center">
                         <!-- 게임 실행 iframe -->
-                        <iframe id="gameIframe" 
-                            src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}" 
+                        <iframe id="gameIframe" src="{{ url_for('static', filename='games/' ~ product_id ~ '.html') }}"
                             style="border: 5px solid black; display: block; margin: 0 auto; width: 100%; height: 800px;">
                         </iframe>
                     </div>
-                    
+
                     <div class="col-lg-6 col-12">
                         <!-- 설명 컨테이너 -->
                         <div class="d-flex justify-content-between align-items-center mt-4">
@@ -153,7 +166,7 @@
                 </div>
             </div>
         </section>
-        
+
         <section class="related-product section-padding border-top">
             <div class="container">
                 <div class="row">
@@ -161,27 +174,28 @@
                         <h3 class="mb-5">You might also like</h3>
                     </div>
                     {% for related_id, related_product in products.items() %}
-                        <div class="col-lg-4 col-12 mb-3">
-                            <div class="product-thumb">
-                                <a href="{{ url_for('product_detail', product_id=related_id) }}">
-                                    <img src="{{ url_for('static', filename='images/game/' ~ related_id ~ '.png') }}" class="img-fluid product-image" alt="{{ related_product.name }}">
-                                </a>
-                                <div class="product-top d-flex">
-                                    <a href="#" class="bi-heart-fill product-icon"></a>
-                                </div>
-                                <div class="product-info d-flex">
-                                    <div>
-                                        <h5 class="product-title mb-0">{{ related_product.name }}</h5>
-                                        <p class="product-p">{{ related_product.description }}</p>
-                                    </div>
+                    <div class="col-lg-4 col-12 mb-3">
+                        <div class="product-thumb">
+                            <a href="{{ url_for('product_detail', product_id=related_id) }}">
+                                <img src="{{ url_for('static', filename='images/game/' ~ related_id ~ '.png') }}"
+                                    class="img-fluid product-image" alt="{{ related_product.name }}">
+                            </a>
+                            <div class="product-top d-flex">
+                                <a href="#" class="bi-heart-fill product-icon"></a>
+                            </div>
+                            <div class="product-info d-flex">
+                                <div>
+                                    <h5 class="product-title mb-0">{{ related_product.name }}</h5>
+                                    <p class="product-p">{{ related_product.description }}</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </section>
-        
+
     </main>
 
     <footer class="site-footer">
