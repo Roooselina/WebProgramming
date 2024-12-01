@@ -27,11 +27,11 @@
                     imageElement.style.filter = 'brightness(0)';
 
                     setTimeout(() => {
-                        // Change to the next image
+                        // 화면 전환
                         currentImageIndex = (currentImageIndex + 1) % images.length;
                         imageElement.src = images[currentImageIndex];
 
-                        // Fade in with brightness
+                        // 밝기 조절을 통한 화면 전환
                         imageElement.style.filter = 'brightness(1)';
                     }, 1000);
                 }
@@ -45,7 +45,7 @@
     <main>
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <!-- Brand Logo -->
+                <!-- 브랜드 로고 변경 -->
                 <a class="navbar-brand" href="{{ url_for('index') }}">
                     <strong><span>JS</span> playground</strong>
                 </a>

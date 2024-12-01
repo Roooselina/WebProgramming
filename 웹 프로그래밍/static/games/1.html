@@ -21,7 +21,7 @@
         }
     </style>
     <script>
-        document.addEventListener("keydown", function(event) {
+        document.addEventListener("keydown", function (event) {
             const iframe = document.getElementById("gameIframe");
             if (event.key === "Tab") {
                 event.preventDefault(); // 기본 동작 방지
@@ -32,7 +32,7 @@
                 }
             }
         });
-        </script>
+    </script>
 </head>
 
 <body>
@@ -68,52 +68,52 @@
         BreakAudio.preload = 'auto';
         BreakAudio.playbackRate = 1.0;
 
-        // Draw Level Selection
+        // 레벨 그리기
         function drawLevelSelection() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = (canvas.width / 18) + "px Migae, sans-serif";
-    ctx.fillStyle = "#FFF";
-    ctx.textAlign = "center";
-    ctx.fillText("Choose Your Game", canvas.width / 2, canvas.height / 3 + 50);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = (canvas.width / 18) + "px Migae, sans-serif";
+            ctx.fillStyle = "#FFF";
+            ctx.textAlign = "center";
+            ctx.fillText("Choose Your Game", canvas.width / 2, canvas.height / 3 + 50);
 
-    // 설명 텍스트
-    ctx.font = "30px Arial, sans-serif";
-    ctx.fillText(levelDescriptions[selectedLevel], canvas.width / 2, 2 * (canvas.height / 4));
+            // 설명 텍스트
+            ctx.font = "30px Arial, sans-serif";
+            ctx.fillText(levelDescriptions[selectedLevel], canvas.width / 2, 2 * (canvas.height / 4));
 
-    // 설명 위 선
-    const lineXStart = canvas.width / 4;
-    const lineXEnd = (canvas.width / 4) * 3;
-    ctx.beginPath();
-    ctx.moveTo(lineXStart, canvas.height / 7*3);
-    ctx.lineTo(lineXEnd, canvas.height / 7*3);
-    ctx.strokeStyle = "#FFF";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+            // 설명 위 선
+            const lineXStart = canvas.width / 4;
+            const lineXEnd = (canvas.width / 4) * 3;
+            ctx.beginPath();
+            ctx.moveTo(lineXStart, canvas.height / 7 * 3);
+            ctx.lineTo(lineXEnd, canvas.height / 7 * 3);
+            ctx.strokeStyle = "#FFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-    // 설명 아래 선
-    ctx.beginPath();
-    ctx.moveTo(lineXStart, (canvas.height / 5)*3);
-    ctx.lineTo(lineXEnd, (canvas.height / 5)*3);
-    ctx.stroke();
+            // 설명 아래 선
+            ctx.beginPath();
+            ctx.moveTo(lineXStart, (canvas.height / 5) * 3);
+            ctx.lineTo(lineXEnd, (canvas.height / 5) * 3);
+            ctx.stroke();
 
-    // 게임 레벨 선택 텍스트 가로로 배치 (간격 좁힘)
-    levels.forEach((level, index) => {
-        ctx.font = (canvas.width / 38) + "px Migae, sans-serif"
-        ctx.fillStyle = index === selectedLevel ? "#FFD700" : "#FFF";
+            // 게임 레벨 선택 텍스트 가로로 배치 (간격 좁힘)
+            levels.forEach((level, index) => {
+                ctx.font = (canvas.width / 38) + "px Migae, sans-serif"
+                ctx.fillStyle = index === selectedLevel ? "#FFD700" : "#FFF";
 
-        // 간격을 좁히기 위해 더 작은 값을 사용하여 x 좌표 계산
-        const levelSpacing = canvas.width / (levels.length + 2); // 기존보다 조금 더 가까이
-        const levelX = levelSpacing * (index + 1.5); // 시작 위치를 약간 가운데로
+                // 간격을 좁히기 위해 더 작은 값을 사용하여 x 좌표 계산
+                const levelSpacing = canvas.width / (levels.length + 2); // 기존보다 조금 더 가까이
+                const levelX = levelSpacing * (index + 1.5); // 시작 위치를 약간 가운데로
 
-        const levelY = 3 * (canvas.height / 4);
+                const levelY = 3 * (canvas.height / 4);
 
-        ctx.fillText(
-            (index === selectedLevel ? "> " : "") + level,
-            levelX,
-            levelY
-        );
-    });
-}
+                ctx.fillText(
+                    (index === selectedLevel ? "> " : "") + level,
+                    levelX,
+                    levelY
+                );
+            });
+        }
 
 
         function shakeScreen() {
@@ -172,37 +172,37 @@
         EndGame.currentTime = 1;
 
         function breakout() {
-            // Set up the canvas and context
+            // BREAK OUT 캔버스 세팅
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
 
-            // Ball properties
+            // BALL 기본 세팅
             let ballX = canvas.width / 2;
             let ballY = canvas.height - 30;
             let ballRadius = 10;
             let ballDX = 4;
             let ballDY = -4;
 
-            // Paddle properties
+            // 패들 기본 세팅
             const paddleHeight = 10;
             const paddleWidth = 100;
             let paddleX = (canvas.width - paddleWidth) / 2;
 
-            // Controls
+            // 컨트롤 키 세팅
             let rightPressed = false;
             let leftPressed = false;
 
-            // Blocks
+            // 블럭들 세팅
             const blockRowCount = 1;
             const blockColumnCount = 1;
-            const blockWidth = canvas.width;
+            const blockWidth = canvas.width / 10;
             const blockHeight = 20;
             const blockPadding = 10;
             const blockOffsetTop = 30;
             const blockOffsetLeft = 30;
             const blocks = [];
 
-            let blockDX = 2; // Speed for blocks moving left and right
+            let blockDX = 2; // 블럭 이동 스피드 세팅
 
             for (let c = 0; c < blockColumnCount; c++) {
                 blocks[c] = [];
@@ -213,7 +213,7 @@
                 }
             }
 
-            // Key listeners
+            // BREAK OUT 키 컨트롤러
             document.addEventListener("keydown", breakoutKeyDownHandler, false);
             document.addEventListener("keyup", breakoutKeyUpHandler, false);
 
@@ -330,7 +330,7 @@
                     breakoutDrawPaddle();
                     breakoutCollisionDetection();
 
-                    // Ball movement
+                    // 볼 움직임 구현
                     if (ballX + ballDX > canvas.width - ballRadius || ballX + ballDX < ballRadius) {
                         ballDX = -ballDX;
                     }
@@ -348,7 +348,7 @@
                     ballX += ballDX;
                     ballY += ballDY;
 
-                    // Paddle movement
+                    // 패들 움직임 구현
                     if (rightPressed && paddleX < canvas.width - paddleWidth) {
                         paddleX += 7;
                     } else if (leftPressed && paddleX > 0) {
@@ -370,15 +370,15 @@
 
         let SpaceInvaderGameWon = false;
 
-        // spaceInvader 게임 메서드
+        // SPACE INVADER 게임 메서드
         function spaceInvader() {
-            // Set up the canvas and context
+            // SPACE INVADER 게임 캔버스 세팅
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Game variables
+            // 게임 플레이어 세팅
             let player = {
                 x: canvas.width / 2 - 25,
                 y: canvas.height - 50,
@@ -391,11 +391,11 @@
             let enemyBullets = [];
             let isGameOver = false;
 
-            // Controls
+            // 게임 키 컨트롤 세팅
             let rightPressed = false;
             let leftPressed = false;
 
-            // Key listeners
+            // 키 컨트롤 구현
             document.addEventListener('keydown', spaceInvaderKeyDownHandler, false);
             document.addEventListener('keyup', spaceInvaderKeyUpHandler, false);
 
@@ -424,15 +424,15 @@
             }
 
 
-            // Spawn enemies
+            // 적 스폰 세팅
             function spawnEnemies() {
                 for (let row = 0; row < 1; row++) {
                     for (let col = 0; col < 1; col++) {
                         enemies.push({
-                            x: col * 120 + 60, // Gap doubled
-                            y: row * 80 + 60, // Gap doubled
-                            width: 80, // Width doubled
-                            height: 50, // Height doubled
+                            x: col * 120 + 60,
+                            y: row * 80 + 60,
+                            width: 80,
+                            height: 50,
                             direction: 1
                         });
                     }
@@ -440,7 +440,7 @@
             }
             spawnEnemies();
 
-            // Game update function
+            // 게임 UPDATE 메서드
             function update() {
                 // Player movement
                 if (rightPressed && player.x + player.width < canvas.width) {
@@ -450,7 +450,7 @@
                     player.x -= player.speed;
                 }
 
-                // Update bullet positions
+                // 총알 그리기 메서드
                 bullets.forEach((bullet, index) => {
                     bullet.y -= bullet.speed;
                     if (bullet.y < 0) {
@@ -458,18 +458,18 @@
                     }
                 });
 
-                // Update enemy positions
+                // ENEMY 위치 업데이트
                 for (let i = 0; i < enemies.length; i++) {
                     const enemy = enemies[i];
                     enemy.x += enemy.direction * 2;
 
-                    // Change direction and move down if enemy hits wall
+                    // 위치 1 낮추기
                     if (enemy.x + enemy.width > canvas.width || enemy.x < 0) {
                         enemy.direction *= -1;
                         enemy.y += 10;
                     }
 
-                    // Check if enemy collides with player
+                    // 적 VS 주인공 충돌 감지
                     if (
                         enemy.x < player.x + player.width &&
                         enemy.x + enemy.width > player.x &&
@@ -481,10 +481,10 @@
                             alert('You Lose!');
                             document.location.reload();
                         }, 500);
-                        break; // Immediately exit the loop when game is over
+                        break; // 게임 EXIT
                     }
 
-                    // Randomly shoot bullets
+                    // 총알 랜덤 발사 메서드
                     if (Math.random() < 0.005 && Math.random() < 0.5) {
                         enemyBullets.push({
                             x: enemy.x + enemy.width / 2 - 2.5,
@@ -496,14 +496,14 @@
                     }
                 }
 
-                // Update enemy bullet positions
+                // 총알 적 업데이트
                 enemyBullets.forEach((bullet, index) => {
                     bullet.y += bullet.speed;
                     if (bullet.y > canvas.height) {
                         enemyBullets.splice(index, 1);
                     }
 
-                    // Check if enemy bullet hits player
+                    // 총알 충돌 검사
                     if (
                         bullet.x < player.x + player.width &&
                         bullet.x + bullet.width > player.x &&
@@ -518,7 +518,7 @@
                     }
                 });
 
-                // Check collisions with enemies
+                // 적 충돌 검사
                 bullets.forEach((bullet, bIndex) => {
                     enemies.forEach((enemy, eIndex) => {
                         if (
@@ -535,42 +535,42 @@
                     });
                 });
 
-                // End game condition
+                // 게임 종료 조건 검사
                 if (enemies.length === 0) {
                     isGameOver = true;
                     SpaceInvaderGameWon = true;
                 }
             }
 
-            // Draw everything
+            // 그리기 메서드
             function draw() {
-                // Clear canvas
+                // 캔버스 초기화
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw player
+                // 플레이어 그리기
                 ctx.fillStyle = 'green';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                // Draw bullets
+                // 적 그리기
                 ctx.fillStyle = 'red';
                 bullets.forEach(bullet => {
                     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 });
 
-                // Draw enemy bullets
+                // 총알 그리기
                 ctx.fillStyle = 'orange';
                 enemyBullets.forEach(bullet => {
                     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 });
 
-                // Draw enemies
+                // 적 그리기
                 ctx.fillStyle = 'blue';
                 enemies.forEach(enemy => {
                     ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
                 });
             }
 
-            // Game loop
+            // 게임 루프 진행
             function gameLoop() {
                 if (!isGameOver) {
                     update();
@@ -581,8 +581,6 @@
                     drawCongratulations();
                 }
             }
-
-            // Start the game loop
             gameLoop();
         }
 
@@ -593,7 +591,7 @@
             spaceInvader();
         }
 
-        // Start Level Function
+        // 게임 선택 메서드
         function startLevel(levelIndex) {
             if (levelIndex === 0) {
                 startBreakout();
@@ -603,20 +601,20 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 startSpaceInvader();
-                SpaceInvaderAudio.volume=0.1;
+                SpaceInvaderAudio.volume = 0.1;
                 SpaceInvaderAudio.play();
 
             }
         }
 
-        // Initial Drawing
+        // 초기 문구 그리기
         drawStartMessage();
 
         function drawCongratulations() {
             fadeOutAudio(BreakOutAudio);
             fadeOutAudio(SpaceInvaderAudio);
 
-            // 별가르 배열 초기화
+            // 별가루 배열 초기화
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             const stars = Array.from({ length: 100 }, () => ({
@@ -628,7 +626,7 @@
             }));
 
             let fadeOpacity = 1;
-            const fadeOutDuration = 60; // 애니메이션 프레임 지원 시간
+            const fadeOutDuration = 60; // 애니메이션 지속 시간
             let fadeCompleted = false;
 
             function animate() {
@@ -638,7 +636,7 @@
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // 화면이 하얘지게 발생 (한 번만 실행)
+                // 화면이 하얘지게 (한 번만 실행)
                 if (!fadeCompleted) {
                     if (fadeOpacity > 0) {
                         ctx.fillStyle = `rgba(255, 255, 255, ${fadeOpacity})`;
@@ -667,7 +665,7 @@
                     ctx.fillText(option, optionX, optionY);
                 });
 
-                // 별가르 효과 (계속 실행)
+                // 별가루 효과
                 stars.forEach((star) => {
                     ctx.beginPath();
                     ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -758,7 +756,7 @@
         });
 
 
-        // Resize canvas on window resize
+        // 캔버스 크기 조정
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;

@@ -21,7 +21,7 @@
         }
     </style>
     <script>
-        document.addEventListener("keydown", function(event) {
+        document.addEventListener("keydown", function (event) {
             const iframe = document.getElementById("gameIframe");
             if (event.key === "Tab") {
                 event.preventDefault(); // 기본 동작 방지
@@ -32,7 +32,7 @@
                 }
             }
         });
-        </script>
+    </script>
 </head>
 
 <body>
@@ -431,7 +431,7 @@
                     ctx.fillText("It's a Tie!", canvas.width / 2, canvas.height / 2);
                 }
 
-                // Update the human score in the parent document
+                // 플레이어 점수 업데이트
                 updateParentScore(scores.human);
 
                 // Enter 키를 누르면 페이지 새로 고침
@@ -446,7 +446,7 @@
             }
         }
 
-        // Function to update the score in the parent document
+        // SCORE RETURN 메서드
         function updateParentScore(score) {
             if (window.parent && window.parent.document) {
                 const scoreElement = window.parent.document.getElementById('score');

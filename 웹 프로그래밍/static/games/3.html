@@ -9,11 +9,10 @@
         body {
             margin: 0;
             overflow: hidden;
-            /* Prevent scrollbars */
             position: relative;
-            /* Establish a positioning context */
         }
 
+        /*초기 화면 변수*/
         #backgroundBlack {
             position: absolute;
             top: 0;
@@ -21,11 +20,10 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            /* Set z-index below other elements */
             background-color: black;
-            /* Set the initial black background */
         }
 
+        /*게임 화면 변수*/
         #backgroundImage {
             position: absolute;
             top: 0;
@@ -33,15 +31,12 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            /* Set z-index between canvas and other elements */
             background-image: url('../images/game/3/background.png');
             background-size: 100%;
             background-position: center bottom;
             background-repeat: no-repeat;
             opacity: 0;
-            /* Make it invisible initially */
             transition: opacity 1s ease-in-out;
-            /* Smooth transition */
         }
 
         canvas {
@@ -52,7 +47,6 @@
             width: 99%;
             position: relative;
             z-index: 2;
-            /* Ensure it appears above the backgrounds but below GIFs */
         }
 
         #animatedGif,
@@ -61,22 +55,17 @@
             top: calc(20% + 60px);
             transform: translateX(-50%);
             z-index: 3;
-            /* Ensure they appear above the canvas */
             pointer-events: none;
-            /* Allow clicks to pass through */
             display: none;
-            /* Initially hide the GIFs */
             animation: pulse 1s infinite alternate;
         }
 
-        /* Style for the animated RUV GIF */
         #animatedGif {
             left: calc(50% - 300px);
             width: 217.075px;
             height: 368.125px;
         }
 
-        /* Style for the animated SELEVER GIF */
         #animatedGif2 {
             left: calc(50% + 100px);
             width: 228.5px;
@@ -100,17 +89,17 @@
 </head>
 
 <body>
-    <!-- Black Background Layer -->
+    <!-- 검정 화면 레이어 -->
     <div id="backgroundBlack"></div>
 
-    <!-- Image Background Layer -->
+    <!-- 게임 화면 레이어 -->
     <div id="backgroundImage"></div>
 
-    <!-- Animated GIF Elements -->
+    <!-- GIF 캐릭터 레이어 -->
     <img id="animatedGif" src="../images/game/3/Ruv_idle.gif" alt="Animated GIF">
     <img id="animatedGif2" src="../images/game/3/Selever_idle.gif" alt="Animated GIF">
 
-    <!-- Canvas for the game -->
+    <!-- 게임 캔버스 -->
     <canvas id="canvas"></canvas>
 
     <script>
@@ -118,22 +107,22 @@
         const ctx = canvas.getContext("2d");
         let score = 0;
         let fallingKeys = [];
-        const keys = ["W", "A", "S", "D"]; // Existing four keys
-        let sectionWidth = 0; // Will be updated in resizeCanvas
+        const keys = ["W", "A", "S", "D"]; 
+        let sectionWidth = 0;
         let countdown = ["Ready?", "2", "1", "Go!"];
         let countdownIndex = 0;
         let countdownInterval;
         let countdownY = 0;
-        let gifShown = false; // Track if the GIF has been shown
+        let gifShown = false;
 
 
-        // Reference to the animated GIFs and background images
+        // 모든 게임 관련 오브젝트
         const animatedGif_Ruv = document.getElementById("animatedGif");
         const animatedGif_Selever = document.getElementById("animatedGif2");
         const backgroundImage = document.getElementById("backgroundImage");
         const backgroundBlack = document.getElementById("backgroundBlack");
 
-        // Predefined key sequence
+        // 게임 악보
         const predefinedKeys = [
             // RUV
             { key: 'W', time: 400, botIndex: 1 },   // 파
@@ -446,9 +435,9 @@
         let currentIndex = 0;
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth * 0.5; // Set to 50% of window width
+            canvas.width = window.innerWidth * 0.5;
             canvas.height = window.innerHeight * 0.95;
-            sectionWidth = canvas.width / 8; // Divide into eight sections
+            sectionWidth = canvas.width / 8; 
             drawStartMessage();
         }
 
@@ -458,20 +447,20 @@
         function drawStartMessage() {
             const fontSize = Math.min(canvas.width, canvas.height) * 0.05;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = `${fontSize}px Arial`; // Changed to Arial for broader compatibility
+            ctx.font = `${fontSize}px Arial`; 
             ctx.fillStyle = "#FFF";
             ctx.textAlign = "center";
             ctx.fillText("PRESS ENTER TO START", canvas.width / 2, canvas.height / 2);
         }
 
         function drawLines() {
-            // Clear the canvas before drawing new lines and keys
+            // 캔버스 초기화
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.strokeStyle = "#FFF";
             ctx.lineWidth = 2;
 
-            // Draw horizontal lines
+            // 가로선 그리기
             ctx.beginPath();
             ctx.moveTo(0, canvas.height * 0.06);
             ctx.lineTo(canvas.width, canvas.height * 0.06);
@@ -482,7 +471,7 @@
             ctx.lineTo(canvas.width, canvas.height * 0.9);
             ctx.stroke();
 
-            // Draw score
+            // SCORE 그리기 메서드
             const scoreFontSize = Math.min(canvas.width, canvas.height) * 0.02;
             ctx.font = `${scoreFontSize}px Arial`;
             ctx.fillStyle = "#FFF";
@@ -508,17 +497,17 @@
             }
         }
 
-        let backgroundMoved = false; // Flag to track if the background has moved
-        let backgroundMovedByUser = false; // Flag to track if the background has moved by user input
-        let timeoutId = null; // Existing timeout ID
-        let idleTimeoutId = null; // New timeout ID for idle state
+        let backgroundMoved = false; 
+        let backgroundMovedByUser = false; 
+        let timeoutId = null; 
+        let idleTimeoutId = null; 
 
-        // Function to set Ruv_idle.gif
+        // RUV GIF 세팅 메서드
         function setIdleGif() {
             animatedGif_Ruv.src = "../images/game/3/Ruv_idle.gif";
         }
 
-        // Function to reset idle timer
+        // 타이머 리셋
         function resetIdleTimer() {
             if (idleTimeoutId) {
                 clearTimeout(idleTimeoutId);
@@ -529,7 +518,7 @@
         }
 
         function drawFallingKeys() {
-            const keyFontSize = Math.min(canvas.width, canvas.height) * 0.03;
+            const keyFontSize = Math.min(canvas.width, canvas.height) * 0.06;
 
             // 텍스트 스타일 설정
             ctx.font = `${keyFontSize}px 'Bauhaus 93'`;
@@ -603,23 +592,17 @@
             fallingKeys = fallingKeys.filter(keyObj => keyObj.y < canvas.height * 0.9);
         }
 
-
-        // Function to animate the background movement to the left
         function animateBackgroundMove() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move in pixels
+            const duration = 500;
+            const moveDistance = 30;
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveLeft = moveDistance * progress;
-
-                // Move the background left by the calculated amount
                 backgroundImage.style.left = `${initialLeft - moveLeft}px`;
 
                 if (progress < 1) {
@@ -630,30 +613,25 @@
             requestAnimationFrame(step);
         }
 
-        // Function to animate the background movement back to the original position
+        // 게임 화면 이동 메서드
         function animateBackgroundReturn() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move back to original position
+            const duration = 500; 
+            const moveDistance = 30; 
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveBack = moveDistance * progress;
-
-                // Move the background back to the original position
                 backgroundImage.style.left = `${initialLeft + moveBack}px`;
 
                 if (progress < 1) {
                     requestAnimationFrame(step);
                 } else {
-                    // Ensure the background is at the original position
                     backgroundImage.style.left = `${initialLeft + moveDistance}px`;
-                    backgroundMovedByUser = false; // Allow user animation again if needed
+                    backgroundMovedByUser = false;
                     // 애니메이션 종료 후 아이들 타이머 리셋
                     resetIdleTimer();
                 }
@@ -665,24 +643,23 @@
         function checkKeyPress(e) {
             const pressedKey = e.key.toUpperCase();
 
-            // 키 입력 시 아이들 타이머 리셋
+            // 키 입력 시 타이머 리셋
             resetIdleTimer();
 
             fallingKeys.forEach((keyObj, index) => {
                 if (keyObj.botIndex === 2) {
-                    // Animate the movement to the left only once
                     if (!backgroundMovedByUser) {
                         animateBackgroundMoveByUser();
-                        backgroundMovedByUser = true; // Set the flag to true to prevent future movement
+                        backgroundMovedByUser = true;
                     }
                     if (keyObj.key === pressedKey && keyObj.y >= canvas.height * 0.85 && keyObj.y <= canvas.height * 0.9) {
                         score += 10;
-                        fallingKeys.splice(index, 1); // Remove the key if pressed correctly
+                        fallingKeys.splice(index, 1);
                     }
                 }
             });
 
-            // Update GIF based on pressed key only for botIndex 2
+            // RUV 키 업데이트
             if (fallingKeys.some(keyObj => keyObj.botIndex === 2)) {
                 switch (pressedKey) {
                     case 'W':
@@ -705,38 +682,31 @@
                 if (timeoutId) {
                     clearTimeout(timeoutId);
                 }
-
-                // Reset GIF to idle after 0.5 seconds
                 timeoutId = setTimeout(() => {
                     animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
                 }, 500);
             }
         }
 
-        // Function to animate the background movement to the left by user action
+        // 게임 배경 이동 메서드_USER
         function animateBackgroundMoveByUser() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move in pixels
+            const duration = 500;
+            const moveDistance = 30;
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveLeft = moveDistance * progress;
-
-                // Move the background left by the calculated amount
                 backgroundImage.style.left = `${initialLeft + moveLeft}px`;
 
                 if (progress < 1) {
                     requestAnimationFrame(step);
                 } else {
-                    // Keep the background at its moved position
                     backgroundImage.style.left = `${initialLeft + moveDistance}px`;
-                    // 애니메이션 종료 후 아이들 타이머 리셋
+                    // 애니메이션 종료 후 타이머 리셋
                     resetIdleTimer();
                 }
             }
@@ -744,30 +714,25 @@
             requestAnimationFrame(step);
         }
 
-        // Function to animate the background movement back to the original position by user action
+        // 게임 배경 복구 메서드_USER
         function animateBackgroundReturnByUser() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move back to original position
+            const duration = 500;
+            const moveDistance = 30;
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveBack = moveDistance * progress;
-
-                // Move the background back to the original position
                 backgroundImage.style.left = `${initialLeft - moveBack}px`;
 
                 if (progress < 1) {
                     requestAnimationFrame(step);
                 } else {
-                    // Ensure the background is at the original position
                     backgroundImage.style.left = `${initialLeft - moveDistance}px`;
-                    backgroundMovedByUser = false; // Allow user animation again if needed
+                    backgroundMovedByUser = false; 
                     // 애니메이션 종료 후 아이들 타이머 리셋
                     resetIdleTimer();
                 }
@@ -781,19 +746,18 @@
 
             fallingKeys.forEach((keyObj, index) => {
                 if (keyObj.botIndex === 2) {
-                    // Animate the movement to the left only once
                     if (!backgroundMovedByUser) {
                         animateBackgroundMoveByUser();
-                        backgroundMovedByUser = true; // Set the flag to true to prevent future movement
+                        backgroundMovedByUser = true; 
                     }
                     if (keyObj.key === pressedKey && keyObj.y >= canvas.height * 0.85 && keyObj.y <= canvas.height * 0.9) {
                         score += 10;
-                        fallingKeys.splice(index, 1); // Remove the key if pressed correctly
+                        fallingKeys.splice(index, 1);
                     }
                 }
             });
 
-            // Update GIF based on pressed key
+            // key에 따른 gif 업데이트
             switch (pressedKey) {
                 case 'W':
                     animatedGif_Selever.src = "../images/game/3/Selever_up.gif";
@@ -816,34 +780,29 @@
                 clearTimeout(timeoutId);
             }
 
-            // Reset GIF to idle after 0.5 seconds
+            // 0.5 초 내로 아무 키도 눌리지 않을 때 default
             timeoutId = setTimeout(() => {
                 animatedGif_Selever.src = "../images/game/3/Selever_idle.gif";
             }, 500);
         }
 
-        // Function to animate the background movement to the left by user action
+        // 게임 화면 이동 메서드_USER
         function animateBackgroundMoveByUser() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move in pixels
+            const duration = 500; 
+            const moveDistance = 30; 
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveLeft = moveDistance * progress;
-
-                // Move the background left by the calculated amount
                 backgroundImage.style.left = `${initialLeft + moveLeft}px`;
 
                 if (progress < 1) {
                     requestAnimationFrame(step);
                 } else {
-                    // Keep the background at its moved position
                     backgroundImage.style.left = `${initialLeft + moveDistance}px`;
                 }
             }
@@ -851,22 +810,20 @@
             requestAnimationFrame(step);
         }
 
-        // Function to animate the background movement back to the original position by user action
+        // 게임 화면 이동 메서드_RUV
         function animateBackgroundReturnByUser() {
             let startTime = null;
-            const duration = 500; // Duration of animation in milliseconds
-            const moveDistance = 30; // Distance to move back to original position
+            const duration = 500; // 애니메이션 이동 기간
+            const moveDistance = 30; // 화면 이동 거리
             const initialLeft = parseInt(backgroundImage.style.left) || 0;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-
-                // Calculate progress
                 const progress = Math.min(elapsed / duration, 1);
                 const moveBack = moveDistance * progress;
 
-                // Move the background back to the original position
+                // 게임 화면 이동
                 backgroundImage.style.left = `${initialLeft - moveBack}px`;
 
                 if (progress < 1) {
@@ -890,7 +847,7 @@
 
         function startCountdown() {
             countdownIndex = 0;
-            countdownY = -50; // Start position above the canvas
+            countdownY = -50;
             const beepAudio = new Audio('../music/Ready.mp3');
             beepAudio.volume = 0.5;
             beepAudio.play();
@@ -906,9 +863,9 @@
         }
 
         function moveWord(message) {
-            countdownY = 300; // Reset position for each new message
+            countdownY = 300; // 초기 글자 위치
             const startTime = Date.now();
-            const duration = 200; // Duration of animation in milliseconds
+            const duration = 200; // 글자 이동 간격
 
             function animate() {
                 const elapsed = Date.now() - startTime;
@@ -933,30 +890,30 @@
         }
 
         function startGame() {
-            // Transition from black background to image background
-            backgroundBlack.style.opacity = "0"; // Fade out black background
-            backgroundImage.style.opacity = "1"; // Fade in image background
+            // 검정 화면 이미지 상태 변수
+            backgroundBlack.style.opacity = "0"; // 이미지 숨긴 상태
+            backgroundImage.style.opacity = "1"; // 이미지 보이는 상태
 
-            // Show the GIFs when the game starts
+            // GIF 보이기 메서드
             if (!gifShown) {
                 animatedGif_Ruv.style.display = "block";
                 animatedGif_Selever.style.display = "block";
                 gifShown = true;
             }
 
-            // Play background music
+            // 음악 시작 메서드
             const beepAudio = new Audio('../music/Zavodila.mp3');
             beepAudio.volume = 0.5;
             beepAudio.play();
 
-            // Generate keys based on predefined timing
+            // 악보 송출 메서드
             predefinedKeys.forEach((keyData) => {
                 setTimeout(() => {
                     generateFallingKey();
                 }, keyData.time);
             });
 
-            // Start the game loop
+            // 게임 루프 시작 메서드
             function gameLoop() {
                 drawLines();
                 drawFallingKeys();

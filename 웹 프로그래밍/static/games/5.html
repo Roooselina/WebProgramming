@@ -23,7 +23,7 @@
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Set canvas dimensions and scale for better quality
+            // 캔버스 속성 지정
             const scale = window.devicePixelRatio || 1;
             const ROWS = 20;
             const BLOCK_SIZE = (95 * window.innerHeight / 100) / ROWS;
@@ -35,12 +35,12 @@
             canvas.style.height = `${ROWS * BLOCK_SIZE}px`;
             ctx.scale(scale, scale);
 
-            // Colors for tetrominoes
+            // 테트리스 색상 지정
             const COLORS = [
                 'cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'
             ];
 
-            // Tetromino shapes
+            // 피스 모양 지정
             const TETROMINOES = [
                 [[1, 1, 1, 1]], // I
                 [[1, 0, 0], [1, 1, 1]], // J
@@ -138,7 +138,7 @@
 
             }
 
-            // Move piece
+            // 피스 움직이기 메서드
             function movePiece(dir) {
                 currentPiece.x += dir;
                 if (collision()) {
@@ -146,7 +146,7 @@
                 }
             }
 
-            // Drop piece
+            // 피스 DROP 메서드
             function dropPiece() {
                 currentPiece.y++;
                 if (collision()) {
@@ -159,7 +159,7 @@
                 }
             }
 
-            // Drop piece to the bottom
+            // 피스 DIRECT DROP 메서드
             function hardDropPiece() {
                 while (!collision()) {
                     currentPiece.y++;
@@ -172,7 +172,7 @@
                 }
             }
 
-            // Rotate piece
+            // 피스 선택 메서드
             function rotatePiece() {
                 const prevShape = currentPiece.shape;
                 currentPiece.shape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i])).reverse();
@@ -221,34 +221,34 @@
             }
 
             function shakeScreen() {
-            const intensity = 5; // 흔들림 강도
-            const duration = 300; // 흔들림 지속 시간 (밀리초)
-            let startTime = Date.now();
+                const intensity = 5; // 흔들림 강도
+                const duration = 300; // 흔들림 지속 시간
+                let startTime = Date.now();
 
-            function shake() {
-                const elapsed = Date.now() - startTime;
-                if (elapsed < duration) {
-                    const offsetX = (Math.random() - 0.5) * intensity;
-                    const offsetY = (Math.random() - 0.5) * intensity;
-                    canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-                    requestAnimationFrame(shake);
-                } else {
-                    canvas.style.transform = ''; // 흔들림 종료 후 원래 위치로 복원
+                function shake() {
+                    const elapsed = Date.now() - startTime;
+                    if (elapsed < duration) {
+                        const offsetX = (Math.random() - 0.5) * intensity;
+                        const offsetY = (Math.random() - 0.5) * intensity;
+                        canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                        requestAnimationFrame(shake);
+                    } else {
+                        canvas.style.transform = ''; // 흔들림 종료 후 원래 위치로 복원
+                    }
                 }
+
+                function popScreen() {
+                    const duration = 100; // 팝업 효과 지속 시간
+                    canvas.style.transform = 'scale(1.1)'; // 화면 확대
+
+                    setTimeout(() => {
+                        canvas.style.transform = 'scale(1)'; // 원래 크기로 복원
+                    }, duration);
+                }
+
+
+                shake();
             }
-
-            function popScreen() {
-                const duration = 100; // 팝업 효과 지속 시간 (밀리초)
-                canvas.style.transform = 'scale(1.1)'; // 화면 확대
-
-                setTimeout(() => {
-                    canvas.style.transform = 'scale(1)'; // 원래 크기로 복원
-                }, duration);
-            }
-
-
-            shake();
-        }
 
             let Twinkle = new Audio('../music/Twinkle.mp3');
 
@@ -272,29 +272,29 @@
                 }
             }
 
-// Reset the game
-function resetGame() {
-    gameBoard = createBoard(ROWS, COLS);
-    currentPiece = createPiece();
-    gameStarted = false;
-    score = 0;
+            // 게임 리셋
+            function resetGame() {
+                gameBoard = createBoard(ROWS, COLS);
+                currentPiece = createPiece();
+                gameStarted = false;
+                score = 0;
 
-    // Update the score in the parent document
-    updateParentScore(score);
-}
+                // PARENT DOC에 SCORE 업데이트
+                updateParentScore(score);
+            }
 
-// Function to update the score in the parent document
-function updateParentScore(score) {
-    if (window.parent && window.parent.document) {
-        const scoreElement = window.parent.document.getElementById('score');
-        if (scoreElement) {
-            scoreElement.textContent = score;
-        }
-    }
-}
+            // SCORE 업데이트 메서드
+            function updateParentScore(score) {
+                if (window.parent && window.parent.document) {
+                    const scoreElement = window.parent.document.getElementById('score');
+                    if (scoreElement) {
+                        scoreElement.textContent = score;
+                    }
+                }
+            }
 
 
-            // Main game loop
+            // 게임 루프
             function gameLoop() {
                 if (gameStarted) {
                     draw();
@@ -308,7 +308,7 @@ function updateParentScore(score) {
 
             gameLoop();
 
-            // Event listeners for key presses
+            // KEY 핸들러
             document.addEventListener('keydown', (e) => {
                 if (!gameStarted && e.key === ' ') {
                     gameStarted = true;

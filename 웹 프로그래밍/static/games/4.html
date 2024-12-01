@@ -333,7 +333,7 @@
 
                         if (currentLyrics.inputWord) {
                             currentLyricToInput = currentLyrics.inputWord;
-                            // 입력해야 하는 단어를 빨간색으로 강조 표시
+                            // 입력해야 하는 단어 빨간색 강조 표시
                             const regex = new RegExp(`(${currentLyrics.inputWord})`, 'i');
                             displayText = currentLyrics.text.replace(regex, '<span style="color: red;">$1</span>');
                         }
@@ -347,7 +347,7 @@
         // 타이핑 효과 함수 추가
         function typeWriterEffect(text) {
             let i = 0;
-            const speed = 100; // 타이핑 속도 조절 (밀리초)
+            const speed = 100; // 타이핑 속도 조절
 
             typingInterval = setInterval(() => {
                 if (i < text.length) {
@@ -361,7 +361,7 @@
 
         function shakeScreen() {
             const intensity = 20; // 흔들림 강도
-            const duration = 300; // 흔들림 지속 시간 (밀리초)
+            const duration = 300; // 흔들림 지속 시간
             let startTime = Date.now();
 
             function shake() {
